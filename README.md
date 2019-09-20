@@ -14,3 +14,6 @@ cd to server folder
 ``docker build --tag=server .``
 
 ``docker run -p 8080:8080 server``
+
+### Run both using docker-compose
+``docker-compose up``

@@ -1,0 +1,20 @@
+version: '3'
+services:
+  client:
+    build: ./client
+    command: sh -c "npm install && npm start"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+    ports:
+      - '3000:3000'
+    working_dir: /app/client
+  server:
+    build: ./server
+    command: sh -c "npm install && npm start"
+    environment:
+      - NODE_ENV=development
+      - PORT=8080
+    ports:
+      - '8080:8080'
+    working_dir: /app/server
