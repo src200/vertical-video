@@ -3,18 +3,15 @@ FROM node:10
 # Create app directory
 WORKDIR /app/server
 
-# Install app dependencies
-# A wildcard is used to ensure both package.json AND package-lock.json are copied
-# where available (npm@5+)
-COPY package*.json ./
+# Bundle app source
+COPY . /app/server
 
 # Install dependencies
 # If you are building your code for production
 # RUN npm ci --only=production
 RUN npm install
 
-# Bundle app source
-COPY . .
+# RUN ffmpeg_install.sh
 
 EXPOSE 8080
 CMD [ "npm", "start" ]

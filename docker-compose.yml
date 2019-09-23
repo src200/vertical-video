@@ -2,6 +2,7 @@ version: '3'
 services:
   client:
     build: ./client
+    container_name: vertical-video_client
     command: sh -c "npm install && npm start"
     environment:
       - NODE_ENV=development
@@ -9,8 +10,11 @@ services:
     ports:
       - '3000:3000'
     working_dir: /app/client
+    volumes:
+      - ./client:/app/client
   server:
     build: ./server
+    container_name: vertical-video_server
     command: sh -c "npm install && npm start"
     environment:
       - NODE_ENV=development
@@ -18,3 +22,5 @@ services:
     ports:
       - '8080:8080'
     working_dir: /app/server
+    volumes:
+      - ./server:/app/server
