@@ -3,13 +3,13 @@ const exec = require('child_process').exec;
 var router = express.Router();
 
 router.get("/", function (req, res, next) {
-    exec('ffmpeg --version', (error, stdout, stderr) => {
+    exec('ffmpeg -version', (error, stdout, stderr) => {
         if (error) {
-            console.error(`exec error: ${error}`);
+            res.send(`exec error: ${error}`);
             return;
+        } else {
+            res.send(`stdout: ${stdout}`);
         }
-        console.log(`stdout: ${stdout}`);
-        console.error(`stderr: ${stderr}`);
     });
 });
 

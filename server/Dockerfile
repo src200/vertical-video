@@ -10,8 +10,7 @@ COPY . /app/server
 # If you are building your code for production
 # RUN npm ci --only=production
 RUN npm install
-
-# RUN ffmpeg_install.sh
+RUN apt-get update && apt-get -y install ffmpeg
 
 EXPOSE 8080
 CMD [ "npm", "start" ]
