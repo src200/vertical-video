@@ -19,21 +19,21 @@ class App extends Component {
     render() {
         return (
             <Layout className="App">
-                <Header className="App-header">
+                {/* <Header className="App-header">
                     <div>
                         Header
                     </div> 
-                </Header>
+                </Header> */}
                 <Content className="App-content">
-                    <div>
+                    <div className="App-uploader">
                         <Uploader></Uploader>
                     </div>
                 </Content>
-                <Footer className="App-footer">
+                {/* <Footer className="App-footer">
                     <div>
                         Footer
                     </div>
-                </Footer>
+                </Footer> */}
             </Layout>
         );
     }

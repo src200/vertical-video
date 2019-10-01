@@ -7,6 +7,8 @@ class Uploader extends Component {
         super(props);
         this.state = {
             name: 'file',
+            accept: 'video/mp4,video/x-m4v,video/*',
+            showUploadList: { showPreviewIcon: true, showRemoveIcon: false },
             action: 'http://localhost:8080/upload',
             onChange(info) {
                 if (info.file.status !== 'uploading') {
@@ -24,8 +26,8 @@ class Uploader extends Component {
         return (
             <div className="Uploader">
                 <Upload {...this.state}>
-                    <Button>
-                        <Icon type="upload" /> Click to Upload
+                    <Button type="primary" size="large">
+                        <Icon type="upload" /> Choose a video file
                     </Button>
                 </Upload>
             </div>

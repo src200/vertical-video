@@ -1,10 +1,22 @@
 .App {
-  text-align: center;
+  background: white;
   .App-header {
+    text-align: left;
   }
-  .App-content-wrapper {
-    .App-content {
-      height: 100%;
+  .App-content {
+    width: 400px;
+    height: 200px;
+    position: absolute;
+    top:0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border: 1px solid #1890ff;
+    border-radius: 5px;
+    margin: auto;
+    .App-uploader {
+     line-height: 200px;
+     text-align: center;
     }
   }
   .App-footer {
