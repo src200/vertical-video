@@ -2,22 +2,17 @@ var express = require('express');
 var formidable = require('formidable');
 var router = express.Router();
 
-/* GET home page. */
-router.get('/', function(req, res, next) {
-  res.render('index', { title: 'Express' });
-});
-
-router.post('/upload', function (req, res){
+router.post('/upload', function (req, res) {
   var form = new formidable.IncomingForm();
-
   form.parse(req);
+  form.uploadDir = "./uploads";
 
-  form.on('fileBegin', function (name, file){
-      file.path = __dirname + '/uploads/' + file.name;
+  form.on('fileBegin', function (name, file) {
+    file.path = form.uploadDir + '/' + file.name;
   });
 
-  form.on('file', function (name, file){
-      console.log('Uploaded ' + file.name);
+  form.on('file', function (name, file) {
+    console.log('Uploaded ' + file.name);
   });
 
   form.on('progress', function (bytesReceived, bytesExpected) {
