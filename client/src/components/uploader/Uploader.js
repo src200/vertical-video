@@ -7,10 +7,7 @@ class Uploader extends Component {
         super(props);
         this.state = {
             name: 'file',
-            action: 'https://www.mocky.io/v2/5cc8019d300000980a055e76',
-            headers: {
-                authorization: 'authorization-text',
-            },
+            action: 'http://localhost:8080/upload',
             onChange(info) {
                 if (info.file.status !== 'uploading') {
                     console.log(info.file, info.fileList);
