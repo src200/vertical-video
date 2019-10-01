@@ -1,9 +1,6 @@
 @import "~antd/dist/antd.css";
-@import '~@uppy/core/dist/style.css';
-@import '~@uppy/dashboard/dist/style.css';
 
 body {
   margin: 0;
   padding: 0;
-  font-family: sans-serif;
 }

@@ -1,0 +1,18 @@
+.App {
+  text-align: center;
+  .App-header {
+  }
+  .App-content-wrapper {
+    .App-content {
+      height: 100%;
+    }
+  }
+  .App-footer {
+    padding: 12px;
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+  }
+}
+
