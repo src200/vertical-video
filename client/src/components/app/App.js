@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import "./App.scss";
 import Uploader from "../uploader/Uploader";
+import Player from "../player/Player";
 import { Layout, Menu } from 'antd';
 
 const { Header, Footer, Content, Sider } = Layout;
@@ -9,9 +10,20 @@ class App extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            aspectRatio: ''
+            aspectRatio: '',
+            videoSrc: ''
         };
+
+        this.captureVideoSrc = this.captureVideoSrc.bind(this);
         this.setAspectRatio = this.setAspectRatio.bind(this);
+    }
+
+    captureVideoSrc(fileObj) {
+        if (fileObj) {
+            this.setState( {
+                videoSrc: URL.createObjectURL(fileObj)
+            });
+        }
     }
 
     setAspectRatio(aspectRatio) {
@@ -23,7 +35,7 @@ class App extends Component {
     render() {
         return (
             <Layout>
-                <Sider>
+                {/* <Sider>
                     <Menu theme="dark" defaultSelectedKeys={['1']} mode="inline">
                         <Menu.Item key="1">
                             <a onClick={this.setAspectRatio.bind(this, '9:16')}>
@@ -36,16 +48,19 @@ class App extends Component {
                             </a>
                         </Menu.Item>
                     </Menu>
-                </Sider>
-                <Layout>
+                </Sider> */}
+                <Layout className="App">
                     {/* <Header className="App-header">
                     <div>
                         Header
                     </div> 
                 </Header> */}
-                    <Content className="App">
-                        <div className="App-content">
-                            <Uploader className="App-uploader" aspectRatio={this.state.aspectRatio}></Uploader>
+                    <Content className="App-content">
+                        <div className="App-uploader">
+                            <Uploader liftVideoSrc={this.captureVideoSrc}></Uploader>
+                        </div>
+                        <div className="App-player">
+                            <Player videoSrc={this.state.videoSrc}></Player>
                         </div>
                     </Content>
                     {/* <Footer className="App-footer">
