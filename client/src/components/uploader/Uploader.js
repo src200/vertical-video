@@ -15,6 +15,10 @@ class Uploader extends Component {
         this.beforeUpload = this.beforeUpload.bind(this);
     }
 
+    componentDidMount() {
+        console.log(this.props);
+    }
+
     beforeUpload(file) {
         if(file) {
             this.setState({
