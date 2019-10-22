@@ -11,9 +11,9 @@ class Player extends Component {
         this.state = {
             video: {
                 framesPerSec: 30,
-                percentPlayed: 0,
-                duration: 0,
-                currentAt: 0
+                percentPlayed: 0.0,
+                duration: 0.0, // sec
+                currentAt: 0.0 // sec
             }
         };
 
@@ -35,9 +35,8 @@ class Player extends Component {
         this.videoEl.current.pause();
     }
 
-    seek() {
-        // this.videoEl.current.fastSeek();
-        // debugger
+    seek(seekTo) {
+        this.videoEl.current.currentTime = seekTo;
     }
 
     componentDidMount() {
@@ -58,12 +57,11 @@ class Player extends Component {
 
         // event triggered while playing video
         this.videoEl.current.addEventListener('timeupdate', (e) => {
-            let percent = (this.videoEl.current.currentTime / this.videoEl.current.duration) * 100;
             this.setState({
                 video: {
-                    percentPlayed: percent,
-                    duration: this.videoEl.current.duration,
-                    currentAt: this.videoEl.current.currentTime
+                    percentPlayed: ((this.videoEl.current.currentTime / this.videoEl.current.duration) * 100).toFixed(2),
+                    duration: this.videoEl.current.duration.toFixed(2),
+                    currentAt: this.videoEl.current.currentTime.toFixed(2)
                 }
             });
         });
@@ -92,7 +90,11 @@ class Player extends Component {
                 </video>
                 <canvas height="400" width="400" ref={this.canvasEl}></canvas>
                 <span>{this.state.video.currentAt} / {this.state.video.duration}</span>
-                <Slider step={0.01} max={this.state.video.duration} value={this.state.video.percentPlayed} onAfterChange={this.seek} />
+                <Slider step={0.01} 
+                        max={parseFloat(this.state.video.duration)}
+                        value={parseFloat(this.state.video.currentAt)}
+                        onChange={this.seek.bind(this)}
+                        onAfterChange={this.seek.bind(this)} />
                 <Button type="primary" onClick={this.play}>Play</Button>
                 <Button type="primary" onClick={this.pause}>Pause</Button>
             </div>
