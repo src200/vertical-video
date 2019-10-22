@@ -48,7 +48,7 @@ class Player extends Component {
             const loopOverFrames = () => {
                 if (!videoDOM.paused && !videoDOM.ended) {
                     ctx.drawImage(videoDOM, 0, 0);
-                    setTimeout(loopOverFrames, 1000 / this.state.video.framesPerSec);
+                    window.requestAnimationFrame(loopOverFrames);
                 }
             }
 
@@ -88,7 +88,7 @@ class Player extends Component {
                 <video src={this.props.videoSrc} controls muted="true" ref={this.videoEl} style={{ display: 'none' }}>
                     Sorry, your browser doesn't support embedded videos.
                 </video>
-                <canvas height="400" width="400" ref={this.canvasEl}></canvas>
+                <canvas ref={this.canvasEl}></canvas>
                 <span>{this.state.video.currentAt} / {this.state.video.duration}</span>
                 <Slider step={0.01} 
                         max={parseFloat(this.state.video.duration)}
