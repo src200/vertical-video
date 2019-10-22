@@ -85,7 +85,7 @@ class Player extends Component {
     render() {
         return (
             <div className="canavas-player">
-                <video src={this.props.videoSrc} controls muted="true" ref={this.videoEl} style={{ display: 'none' }}>
+                <video src={this.props.videoSrc} ref={this.videoEl} style={{ display: 'none' }}>
                     Sorry, your browser doesn't support embedded videos.
                 </video>
                 <canvas ref={this.canvasEl}></canvas>
