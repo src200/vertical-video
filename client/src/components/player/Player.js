@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Progress, Button } from 'antd';
+import { Slider, Button } from 'antd';
 
 class Player extends Component {
     constructor(props) {
@@ -35,9 +35,9 @@ class Player extends Component {
         this.videoEl.current.pause();
     }
 
-    seek(t) {
+    seek() {
         // this.videoEl.current.fastSeek();
-        debugger
+        // debugger
     }
 
     componentDidMount() {
@@ -92,7 +92,7 @@ class Player extends Component {
                 </video>
                 <canvas height="400" width="400" ref={this.canvasEl}></canvas>
                 <span>{this.state.video.currentAt} / {this.state.video.duration}</span>
-                <Progress percent={this.state.video.percentPlayed} onClick={(e)=> {this.seek(e)}}/>
+                <Slider step={0.01} max={this.state.video.duration} value={this.state.video.percentPlayed} onAfterChange={this.seek} />
                 <Button type="primary" onClick={this.play}>Play</Button>
                 <Button type="primary" onClick={this.pause}>Pause</Button>
             </div>
