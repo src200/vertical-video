@@ -42,17 +42,16 @@ class Player extends Component {
     componentDidMount() {
         const ctx = this.canvasEl.current.getContext('2d');
 
+        const drawFrames = (videoDOM) => {
+            if (!videoDOM.paused && !videoDOM.ended) {
+                ctx.drawImage(videoDOM, 0, 0);
+                window.requestAnimationFrame(() => drawFrames(videoDOM));
+            }
+        }
+
         // event triggered on playing video
         this.videoEl.current.addEventListener('play', (e) => {
-            let videoDOM = this.videoEl.current;
-            const loopOverFrames = () => {
-                if (!videoDOM.paused && !videoDOM.ended) {
-                    ctx.drawImage(videoDOM, 0, 0);
-                    window.requestAnimationFrame(loopOverFrames);
-                }
-            }
-
-            loopOverFrames();
+            drawFrames(this.videoEl.current);
         });
 
         // event triggered while playing video
@@ -66,9 +65,10 @@ class Player extends Component {
             });
         });
 
-        // event triggred on pausing video
-        this.videoEl.current.addEventListener('pause', (e) => {
-
+        // event is fired when the metadata has been loaded.
+        this.videoEl.current.addEventListener("loadedmetadata", function () {
+            ctx.canvas.width = this.videoWidth;
+            ctx.canvas.height = this.videoHeight;
         });
     }
 
@@ -90,11 +90,10 @@ class Player extends Component {
                 </video>
                 <canvas ref={this.canvasEl}></canvas>
                 <span>{this.state.video.currentAt} / {this.state.video.duration}</span>
-                <Slider step={0.01} 
-                        max={parseFloat(this.state.video.duration)}
-                        value={parseFloat(this.state.video.currentAt)}
-                        onChange={this.seek.bind(this)}
-                        onAfterChange={this.seek.bind(this)} />
+                <Slider step={0.01}
+                    max={parseFloat(this.state.video.duration)}
+                    value={parseFloat(this.state.video.currentAt)}
+                    onChange={this.seek.bind(this)} />
                 <Button type="primary" onClick={this.play}>Play</Button>
                 <Button type="primary" onClick={this.pause}>Pause</Button>
             </div>
