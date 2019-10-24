@@ -1,13 +1,11 @@
 import React, { Component } from 'react';
+import './Player.scss';
 import { Slider, Button } from 'antd';
 
 class Player extends Component {
     constructor(props) {
         super(props);
-        this.props = {
-            videoSrc: ''
-        };
-
+       
         this.state = {
             video: {
                 framesPerSec: 30,
@@ -17,6 +15,7 @@ class Player extends Component {
             }
         };
 
+        this.reqAnimeId = '';
 
         this.play = this.play.bind(this);
         this.pause = this.pause.bind(this);
@@ -65,30 +64,36 @@ class Player extends Component {
             });
         });
 
-        // event is fired when the metadata has been loaded.
-        this.videoEl.current.addEventListener("loadedmetadata", function () {
-            ctx.canvas.width = this.videoWidth;
-            ctx.canvas.height = this.videoHeight;
+        // // event is fired when the metadata has been loaded.
+        // this.videoEl.current.addEventListener("loadedmetadata", function () {
+        //     ctx.canvas.width = this.videoWidth;
+        //     ctx.canvas.height = this.videoHeight;
+        // });
+
+        // event is fired on first frame has been loaded.
+        this.videoEl.current.addEventListener('loadeddata', function (e) {
+            // draw initial frame on canvas            
+            this.play();
+            setTimeout(() => {
+                this.pause();
+            }, 100);
         });
     }
 
     componentWillUnmount() {
-        this.videoEl.current.removeEventListener('play', (e) => {
-
-        });
-
-        this.videoEl.current.removeEventListener('pause', (e) => {
-
-        });
+        if (this.reqAnimeId)
+            cancelAnimationFrame(this.reqAnimeId);
     }
 
     render() {
         return (
-            <div className="canavas-player">
+            <div className="player">
                 <video src={this.props.videoSrc} ref={this.videoEl} style={{ display: 'none' }}>
                     Sorry, your browser doesn't support embedded videos.
                 </video>
-                <canvas ref={this.canvasEl}></canvas>
+                <div className="canavas-container">
+                    <canvas ref={this.canvasEl}></canvas>
+                </div>
                 <span>{this.state.video.currentAt} / {this.state.video.duration}</span>
                 <Slider step={0.01}
                     max={parseFloat(this.state.video.duration)}
