@@ -43,7 +43,8 @@ class Player extends Component {
 
         const drawFrames = (videoDOM) => {
             if (!videoDOM.paused && !videoDOM.ended) {
-                ctx.drawImage(videoDOM, 0, 0);
+                ctx.drawImage(videoDOM, 0, 0, videoDOM.videoWidth, videoDOM.videoHeight,
+                                        0, 0, ctx.canvas.width, ctx.canvas.height);
                 window.requestAnimationFrame(() => drawFrames(videoDOM));
             }
         }
@@ -76,7 +77,7 @@ class Player extends Component {
             this.play();
             setTimeout(() => {
                 this.pause();
-            }, 100);
+            }, 200);
         });
     }
 
@@ -92,10 +93,10 @@ class Player extends Component {
                     Sorry, your browser doesn't support embedded videos.
                 </video>
                 <div className="canavas-container">
-                    <canvas ref={this.canvasEl}></canvas>
+                    <canvas ref={this.canvasEl} width="640" height="480"></canvas>
                 </div>
                 <span>{this.state.video.currentAt} / {this.state.video.duration}</span>
-                <Slider step={0.01}
+                <Slider step={0.01} className="canvas-timeline"
                     max={parseFloat(this.state.video.duration)}
                     value={parseFloat(this.state.video.currentAt)}
                     onChange={this.seek.bind(this)} />
