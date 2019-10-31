@@ -20,6 +20,9 @@ class Player extends Component {
         this.play = this.play.bind(this);
         this.pause = this.pause.bind(this);
         this.seek = this.seek.bind(this);
+        this.mouseDownOnCanvas = this.mouseDownOnCanvas.bind(this);
+        this.mouseMoveOnCanvas = this.mouseMoveOnCanvas.bind(this);
+        this.mouseUpOnCanvas = this.mouseUpOnCanvas.bind(this);
 
         // create refs to store the video and canvas DOM element
         this.videoEl = React.createRef();
@@ -38,9 +41,20 @@ class Player extends Component {
         this.videoEl.current.currentTime = seekTo;
     }
 
+    mouseDownOnCanvas(e) {
+        console.log(e.clientX, e.clientY);
+    }
+
+    mouseMoveOnCanvas(e) {
+        // console.log(e.clientX, e.clientY);
+    }
+
+    mouseUpOnCanvas(e) {
+        // console.log(e.clientX, e.clientY);
+    }
+
     componentDidMount() {
         const ctx = this.canvasEl.current.getContext('2d');
-
         const drawFrames = (videoDOM) => {
             if (!videoDOM.paused && !videoDOM.ended) {
                 ctx.drawImage(videoDOM, 0, 0, videoDOM.videoWidth, videoDOM.videoHeight,
@@ -65,12 +79,6 @@ class Player extends Component {
             });
         });
 
-        // // event is fired when the metadata has been loaded.
-        // this.videoEl.current.addEventListener("loadedmetadata", function () {
-        //     ctx.canvas.width = this.videoWidth;
-        //     ctx.canvas.height = this.videoHeight;
-        // });
-
         // event is fired on first frame has been loaded.
         this.videoEl.current.addEventListener('loadeddata', function (e) {
             // draw initial frame on canvas            
@@ -92,8 +100,12 @@ class Player extends Component {
                 <video src={this.props.videoSrc} ref={this.videoEl} style={{ display: 'none' }}>
                     Sorry, your browser doesn't support embedded videos.
                 </video>
-                <div className="canavas-container">
-                    <canvas ref={this.canvasEl} width="640" height="480"></canvas>
+                <div className="canvas-container">
+                    <canvas ref={this.canvasEl} width="640" height="480"
+                            onMouseDown={this.mouseDownOnCanvas}
+                            onMouseMove={this.mouseMoveOnCanvas}
+                            onMouseUp={this.mouseUpOnCanvas}>
+                    </canvas>
                 </div>
                 <span>{this.state.video.currentAt} / {this.state.video.duration}</span>
                 <Slider step={0.01} className="canvas-timeline"
