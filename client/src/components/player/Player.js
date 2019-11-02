@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import './Player.scss';
+import Resizer from '../resizer/Resizer';
 import { Slider, Button } from 'antd';
 
 class Player extends Component {
@@ -106,6 +107,7 @@ class Player extends Component {
                             onMouseMove={this.mouseMoveOnCanvas}
                             onMouseUp={this.mouseUpOnCanvas}>
                     </canvas>
+                    <Resizer></Resizer>
                 </div>
                 <span>{this.state.video.currentAt} / {this.state.video.duration}</span>
                 <Slider step={0.01} className="canvas-timeline"

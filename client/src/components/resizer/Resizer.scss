@@ -1,0 +1,43 @@
+.resizable {
+    background: transparent;
+    width: 100px;
+    height: 100px;
+    position: absolute;
+    top: 100px;
+    left: 100px;
+    .resizers{
+        width: 100%;
+        height: 100%;
+        border: 2px solid #1890ff;
+        border-style: dashed;
+        box-sizing: border-box;
+        .resizer{
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid #1890ff;
+            position: absolute;
+        }
+        .top-left {
+            left: -3px;
+            top: -3px;
+            cursor: nwse-resize;
+        }
+        .top-right {
+            right: -3px;
+            top: -3px;
+            cursor: nesw-resize;
+        }
+        .bottom-left {
+            left: -3px;
+            bottom: -3px;
+            cursor: nesw-resize;
+        }
+        .bottom-right {
+            right: -3px;
+            bottom: -3px;
+            cursor: nwse-resize;
+        }
+    }
+}
