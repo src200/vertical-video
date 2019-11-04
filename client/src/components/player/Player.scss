@@ -1,6 +1,7 @@
 .player {
     .canvas-container {
         position: relative;
+        box-sizing: border-box;
     }
     .canvas-timeline {
         width: 630px;

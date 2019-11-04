@@ -13,6 +13,14 @@ class Player extends Component {
                 percentPlayed: 0.0,
                 duration: 0.0, // sec
                 currentAt: 0.0 // sec
+            },
+            coordinates: {
+                canvas: {
+                    x: 0,
+                    y: 0,
+                    width: 0,
+                    height: 0
+                }
             }
         };
 
@@ -21,9 +29,6 @@ class Player extends Component {
         this.play = this.play.bind(this);
         this.pause = this.pause.bind(this);
         this.seek = this.seek.bind(this);
-        this.mouseDownOnCanvas = this.mouseDownOnCanvas.bind(this);
-        this.mouseMoveOnCanvas = this.mouseMoveOnCanvas.bind(this);
-        this.mouseUpOnCanvas = this.mouseUpOnCanvas.bind(this);
 
         // create refs to store the video and canvas DOM element
         this.videoEl = React.createRef();
@@ -42,21 +47,17 @@ class Player extends Component {
         this.videoEl.current.currentTime = seekTo;
     }
 
-    mouseDownOnCanvas(e) {
-        console.log(e.clientX, e.clientY);
-    }
-
-    mouseMoveOnCanvas(e) {
-        // console.log(e.clientX, e.clientY);
-    }
-
-    mouseUpOnCanvas(e) {
-        // console.log(e.clientX, e.clientY);
-    }
-
     componentDidMount() {
         const ctx = this.canvasEl.current.getContext('2d');
         ctx.imageSmoothingEnabled = true;
+
+        // update co-ordinates of canvas element realtive to viewport
+        this.setState({
+            canvasCoordinates: {
+                x: this.canvasEl.current.getBoundingClientRect().left,
+                y: this.canvasEl.current.getBoundingClientRect().top
+            }
+        });
         
         const drawFrames = (videoDOM) => {
             if (!videoDOM.paused && !videoDOM.ended) {
