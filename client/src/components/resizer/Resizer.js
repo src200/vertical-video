@@ -7,6 +7,8 @@ class Resizer extends Component {
         this.state = {
             resizerX: 0,
             resizerY: 0,
+            offsetX: 0,
+            offsetY: 0,
             mouseX: 0,
             mouseY: 0,
             width: 100,
@@ -22,13 +24,17 @@ class Resizer extends Component {
 
     mouseDown(e) {
         this.isMouseDown = true;
+        this.setState({
+            offsetX: e.clientX - this.state.offsetX,
+            offsetY: e.clientY - this.state.offsetY
+        });
     }
 
     mouseMove(e) {
         if (this.isMouseDown) {
             this.setState({
-                resizerX: e.clientX,
-                resizerY: e.clientY
+                resizerX: e.clientX - this.state.offsetX,
+                resizerY: e.clientY - this.state.offsetY
             });
         }
     }
@@ -38,17 +44,7 @@ class Resizer extends Component {
     }
 
     componentDidMount() {
-        window.addEventListener('mousedown', (e) => {
-            this.mouseDown(e);
-        }, this);
-
-        window.addEventListener('mousemove', (e) => {
-            this.mouseMove(e);
-        }, this);
-
-        window.addEventListener('mouseup', (e) => {
-            this.mouseUp(e);
-        }, this);
+       
     }
 
     render() {
@@ -61,7 +57,10 @@ class Resizer extends Component {
                         width: this.state.width + 'px',
                         height: this.state.height + 'px'
                     }
-                }>
+                }
+                onMouseDown={this.mouseDown}
+                onMouseMove={this.mouseMove}
+                onMouseUp={this.mouseUp}>
                 <div className="resizers">
                     <div className="resizer top-left"></div>
                     <div className="resizer top-right"></div>
