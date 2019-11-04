@@ -56,10 +56,11 @@ class Player extends Component {
 
     componentDidMount() {
         const ctx = this.canvasEl.current.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        
         const drawFrames = (videoDOM) => {
             if (!videoDOM.paused && !videoDOM.ended) {
-                ctx.drawImage(videoDOM, 0, 0, videoDOM.videoWidth, videoDOM.videoHeight,
-                                        0, 0, ctx.canvas.width, ctx.canvas.height);
+                ctx.drawImage(videoDOM, 0, 0, ctx.canvas.width, ctx.canvas.height);
                 window.requestAnimationFrame(() => drawFrames(videoDOM));
             }
         }
