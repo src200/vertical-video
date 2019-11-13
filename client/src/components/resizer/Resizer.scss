@@ -1,43 +1,49 @@
-.resizable {
-    background: transparent;
-    width: 100px;
-    height: 100px;
-    position: absolute;
-    top: 100px;
-    left: 100px;
-    .resizers{
-        width: 100%;
-        height: 100%;
-        border: 2px solid #1890ff;
-        border-style: dashed;
-        box-sizing: border-box;
-        .resizer{
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: white;
-            border: 3px solid #1890ff;
-            position: absolute;
-        }
-        .top-left {
-            left: -3px;
-            top: -3px;
-            cursor: nwse-resize;
-        }
-        .top-right {
-            right: -3px;
-            top: -3px;
-            cursor: nesw-resize;
-        }
-        .bottom-left {
-            left: -3px;
-            bottom: -3px;
-            cursor: nesw-resize;
-        }
-        .bottom-right {
-            right: -3px;
-            bottom: -3px;
-            cursor: nwse-resize;
-        }
-    }
+.resizer {
+  border: 2px solid #1890ff;
+  border-style: dashed;
+  box-sizing: border-box;
+}
+.resize {
+  width: 12px !important;
+  height: 12px !important;
+  border-radius: 50% !important;
+  background: white !important;
+  border: 3px solid #1890ff !important;
+  position: absolute !important;
+}
+.top {
+    cursor: n-resize !important;
+}
+.top-left {
+  @extend .resize;
+  left: -6px !important;
+  top: -6px !important;
+  cursor: nwse-resize !important;
+}
+.top-right {
+  @extend .resize ;
+  right: -6px !important;
+  top: -6px !important;
+  cursor: nesw-resize !important;
+}
+.bottom {
+    cursor: s-resize !important;
+}
+.bottom-left {
+  @extend .resize;
+  left: -6px !important;
+  bottom: -5px !important;
+  cursor: nesw-resize !important;
+}
+.bottom-right {
+  @extend .resize;
+  right: -5px !important;
+  bottom: -6px !important;
+  cursor: nwse-resize !important;
+}
+.left {
+    cursor: w-resize !important;
+}
+.right {
+    cursor: e-resize !important;
 }

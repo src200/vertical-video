@@ -1,12 +1,14 @@
 import React, { Component } from 'react';
 import './Player.scss';
-import Resizer from '../resizer/Resizer';
+import '../resizer/Resizer.scss'
+// import Resizer from '../resizer/Resizer';
 import { Slider, Button } from 'antd';
+import { Rnd } from 'react-rnd';
 
 class Player extends Component {
     constructor(props) {
         super(props);
-       
+
         this.state = {
             video: {
                 framesPerSec: 30,
@@ -20,6 +22,30 @@ class Player extends Component {
                     y: 0,
                     width: 0,
                     height: 0
+                }
+            },
+            resizerOpts: {
+                className: 'resizer',
+                minWidth: 100,
+                minHeight: 100,
+                bounds: 'parent',
+                resizeHandleClasses: {
+                    bottom: 'bottom',
+                    bottomLeft: 'bottom-left',
+                    bottomRight: 'bottom-right',
+                    left: 'left',
+                    right: 'right',
+                    top: 'top',
+                    topLeft: 'top-left',
+                    topRight: 'top-right'
+                },
+                onDragStop: (e, d) => { this.setState({ x: d.x, y: d.y }) },
+                onResizeStop: (e, direction, ref, delta, position) => {
+                    this.setState({
+                        width: ref.style.width,
+                        height: ref.style.height,
+                        ...position,
+                    });
                 }
             }
         };
@@ -58,7 +84,7 @@ class Player extends Component {
                 y: this.canvasEl.current.getBoundingClientRect().top
             }
         });
-        
+
         const drawFrames = (videoDOM) => {
             if (!videoDOM.paused && !videoDOM.ended) {
                 ctx.drawImage(videoDOM, 0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -105,11 +131,13 @@ class Player extends Component {
                 </video>
                 <div className="canvas-container">
                     <canvas ref={this.canvasEl} width="640" height="480"
-                            onMouseDown={this.mouseDownOnCanvas}
-                            onMouseMove={this.mouseMoveOnCanvas}
-                            onMouseUp={this.mouseUpOnCanvas}>
+                        onMouseDown={this.mouseDownOnCanvas}
+                        onMouseMove={this.mouseMoveOnCanvas}
+                        onMouseUp={this.mouseUpOnCanvas}>
                     </canvas>
-                    <Resizer></Resizer>
+                    <Rnd {...this.state.resizerOpts}>
+                        
+                    </Rnd>
                 </div>
                 <span>{this.state.video.currentAt} / {this.state.video.duration}</span>
                 <Slider step={0.01} className="canvas-timeline"
