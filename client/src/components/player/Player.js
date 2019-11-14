@@ -24,6 +24,12 @@ class Player extends Component {
                     height: 0
                 }
             },
+            previewFrameGeometry: {
+                sx: 0,
+                sy: 0,
+                sWidth: 100,
+                sHeight: 100
+            },
             resizerOpts: {
                 className: 'resizer',
                 minWidth: 100,
@@ -39,12 +45,24 @@ class Player extends Component {
                     topLeft: 'top-left',
                     topRight: 'top-right'
                 },
-                onDragStop: (e, d) => { this.setState({ x: d.x, y: d.y }) },
-                onResizeStop: (e, direction, ref, delta, position) => {
+                onDrag: (e, d) => {
                     this.setState({
-                        width: ref.style.width,
-                        height: ref.style.height,
-                        ...position,
+                        previewFrameGeometry: {
+                            sx: d.x,
+                            sy: d.y,
+                            sWidth: e.target.offsetWidth,
+                            sHeight: e.target.offsetHeight
+                        }
+                    });
+                },
+                onResize: (e, direction, ref, delta, position) => {
+                    this.setState({
+                        previewFrameGeometry: {
+                            sx: position.x,
+                            sy: position.y,
+                            sWidth: ref.offsetWidth,
+                            sHeight: ref.offsetHeight
+                        }
                     });
                 }
             }
@@ -59,6 +77,7 @@ class Player extends Component {
         // create refs to store the video and canvas DOM element
         this.videoEl = React.createRef();
         this.canvasEl = React.createRef();
+        this.previewCanvasEl = React.createRef();
     }
 
     play() {
@@ -75,7 +94,9 @@ class Player extends Component {
 
     componentDidMount() {
         const ctx = this.canvasEl.current.getContext('2d');
+        const previewCtx = this.previewCanvasEl.current.getContext('2d');
         ctx.imageSmoothingEnabled = true;
+        let imageData;
 
         // update co-ordinates of canvas element realtive to viewport
         this.setState({
@@ -88,8 +109,17 @@ class Player extends Component {
         const drawFrames = (videoDOM) => {
             if (!videoDOM.paused && !videoDOM.ended) {
                 ctx.drawImage(videoDOM, 0, 0, ctx.canvas.width, ctx.canvas.height);
+                drawPreviewFrames();
                 window.requestAnimationFrame(() => drawFrames(videoDOM));
             }
+        }
+
+        const drawPreviewFrames = () => {
+            imageData = ctx.getImageData(this.state.previewFrameGeometry.sx,
+                this.state.previewFrameGeometry.sy, this.state.previewFrameGeometry.sWidth,
+                this.state.previewFrameGeometry.sHeight);
+
+            previewCtx.putImageData(imageData, 0, 0);
         }
 
         // event triggered on playing video
@@ -130,22 +160,21 @@ class Player extends Component {
                     Sorry, your browser doesn't support embedded videos.
                 </video>
                 <div className="canvas-container">
-                    <canvas ref={this.canvasEl} width="640" height="480"
-                        onMouseDown={this.mouseDownOnCanvas}
-                        onMouseMove={this.mouseMoveOnCanvas}
-                        onMouseUp={this.mouseUpOnCanvas}>
-                    </canvas>
+                    <canvas ref={this.canvasEl} width="640" height="480"></canvas>
                     <Rnd {...this.state.resizerOpts}>
-                        
+
                     </Rnd>
+                    <div>{this.state.video.currentAt} / {this.state.video.duration}</div>
+                    <Slider step={0.01} className="canvas-timeline"
+                        max={parseFloat(this.state.video.duration)}
+                        value={parseFloat(this.state.video.currentAt)}
+                        onChange={this.seek.bind(this)} />
+                    <Button type="primary" onClick={this.play}>Play</Button>
+                    <Button type="primary" onClick={this.pause}>Pause</Button>
                 </div>
-                <span>{this.state.video.currentAt} / {this.state.video.duration}</span>
-                <Slider step={0.01} className="canvas-timeline"
-                    max={parseFloat(this.state.video.duration)}
-                    value={parseFloat(this.state.video.currentAt)}
-                    onChange={this.seek.bind(this)} />
-                <Button type="primary" onClick={this.play}>Play</Button>
-                <Button type="primary" onClick={this.pause}>Pause</Button>
+                <div className="preview-container">
+                    <canvas ref={this.previewCanvasEl} width={this.state.previewFrameGeometry.sWidth} height={this.state.previewFrameGeometry.sHeight}></canvas>
+                </div>
             </div>
         )
     }

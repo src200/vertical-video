@@ -1,11 +1,13 @@
 .player {
+  display: flex;
   .canvas-container {
     position: relative;
     box-sizing: border-box;
-    width: "640px";
-    height: "480px";
+    .canvas-timeline {
+      width: 630px;
+    }
   }
-  .canvas-timeline {
-    width: 630px;
+  .preview-canvas {
   }
+  
 }
