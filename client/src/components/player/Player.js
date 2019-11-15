@@ -4,7 +4,6 @@ import '../resizer/Resizer.scss'
 // import Resizer from '../resizer/Resizer';
 import { Slider, Button } from 'antd';
 import { Rnd } from 'react-rnd';
-import {CanvasFlow} from '../../oflow';
 
 class Player extends Component {
     constructor(props) {
@@ -79,7 +78,6 @@ class Player extends Component {
         this.videoEl = React.createRef();
         this.canvasEl = React.createRef();
         this.previewCanvasEl = React.createRef();
-        // this.rnd = React.createRef();
     }
 
     play() {
@@ -100,20 +98,18 @@ class Player extends Component {
         ctx.imageSmoothingEnabled = true;
         let imageData;
 
-        // update co-ordinates of canvas element realtive to viewport
-        this.setState({
-            canvasCoordinates: {
-                x: this.canvasEl.current.getBoundingClientRect().left,
-                y: this.canvasEl.current.getBoundingClientRect().top
-            }
-        });
+        // // update co-ordinates of canvas element realtive to viewport
+        // this.setState({
+        //     canvasCoordinates: {
+        //         x: this.canvasEl.current.getBoundingClientRect().left,
+        //         y: this.canvasEl.current.getBoundingClientRect().top
+        //     }
+        // });
 
         const drawFrames = (videoDOM) => {
             if (!videoDOM.paused && !videoDOM.ended) {
                 ctx.drawImage(videoDOM, 0, 0, ctx.canvas.width, ctx.canvas.height);
                 drawPreviewFrames();
-                // Starts capturing the flow from webcamera:
-                flow.startCapture();
                 window.requestAnimationFrame(() => drawFrames(videoDOM));
             }
         }
@@ -126,39 +122,14 @@ class Player extends Component {
             previewCtx.putImageData(imageData, 0, 0);
         }
 
-        const flow = new CanvasFlow(this.canvasEl.current);
-            
-        // Every time when optical flow is calculated
-        // call the passed in callback:
-        flow.onCalculated((direction) => {
-            console.log(direction);
-            // direction is an object which describes current flow:
-            // direction.u, direction.v {floats} general flow vector
-            // direction.zones {Array} is a collection of flowZones.
-            //  Each flow zone describes optical flow direction inside of it.
-            // debugger
-            // ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-            for(var i = 0; i < direction.zones.length; ++i) {
-                var zone = direction.zones[i];
-                ctx.beginPath();
-                ctx.moveTo(zone.x,zone.y);
-                ctx.lineTo((zone.x - zone.u), zone.y + zone.v);
-                ctx.stroke();
-            }
-            // updateCropperDimensions(direction.u, direction.v);
-        });
-
-       
-        // once you are done capturing call
-        // flow.stopCapture();
-
-        const updateCropperDimensions = (x, y, width, height) => {
-            if (x && y) {
-                this.rnd.updatePosition({ x: x, y: y });
+        // {x,y} can be position object or size object 
+        const updateResizerDimensions = (geometry, x, y) => {
+            if (geometry === 'position') {
+                this.rnd.updatePosition({ x: parseInt(x), y: parseInt(y) });
             }
 
-            if (width && height) {
-                this.rnd.updateSize({ width: width, height: height });
+            if (geometry === 'size') {
+                this.rnd.updateSize({ width: x, height: y });
             }
         }
 
