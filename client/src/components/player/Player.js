@@ -17,13 +17,11 @@ class Player extends Component {
                 duration: 0.0, // sec
                 currentAt: 0.0 // sec
             },
-            coordinates: {
-                canvas: {
-                    x: 0,
-                    y: 0,
-                    width: 0,
-                    height: 0
-                }
+            canvas: {
+                x: 0,
+                y: 0,
+                width: 640,
+                height: 480
             },
             previewFrameGeometry: {
                 sx: 0,
@@ -97,10 +95,10 @@ class Player extends Component {
     initVideoProcessing() {
         let video = this.videoEl.current;
         let cap = new cv.VideoCapture(video);
-
         
-        let src = new cv.Mat();
-        let dst = new cv.Mat();
+        let src = new cv.Mat(video.height, video.width, cv.CV_8UC4);
+        let dst = new cv.Mat(video.height, video.width, cv.CV_8UC4);
+
         const FPS = 30;
         const processVideo = () => {
             try {
@@ -110,10 +108,11 @@ class Player extends Component {
                     return;
                 }
                 let begin = Date.now();
-
-                cap.read(src);
-                cv.cvtColor(src, src, cv.COLOR_RGB2GRAY, 0);
-                cv.Laplacian(src, dst, cv.CV_8U, 1, 1, 0, cv.BORDER_DEFAULT);
+                let newMat = new cv.Mat();
+                src.convertTo(newMat, cv.CV_8UC4);
+                cap.read(newMat);
+                cv.cvtColor(newMat, newMat, cv.COLOR_RGB2GRAY, 0);
+                cv.Laplacian(newMat, dst, cv.CV_8UC4, 1, 1, 0, cv.BORDER_DEFAULT);
                 cv.imshow("canvasOutput", dst);
 
                 // schedule the next one.
@@ -167,7 +166,7 @@ class Player extends Component {
         });
 
         // event is fired on first frame has been loaded.
-        this.videoEl.current.addEventListener('loadeddata', function (e) {
+        this.videoEl.current.addEventListener('loadeddata', (e) => {
             // draw initial frame on canvas            
             this.play();
             setTimeout(() => {
@@ -188,7 +187,7 @@ class Player extends Component {
                     Sorry, your browser doesn't support embedded videos.
                 </video>
                 <div className="canvas-container">
-                    <canvas ref={this.canvasEl} width="640" height="480"></canvas>
+                    <canvas ref={this.canvasEl} width={this.state.canvas.width} height={this.state.canvas.height}></canvas>
                     <Rnd ref={c => { this.rnd = c; }} {...this.state.resizerOpts}></Rnd>
                     <div>{this.state.video.currentAt} / {this.state.video.duration}</div>
                     <Slider step={0.01} className="canvas-timeline"
