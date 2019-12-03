@@ -95,25 +95,105 @@ class Player extends Component {
     initVideoProcessing() {
         let video = this.videoEl.current;
         let cap = new cv.VideoCapture(video);
-        
-        let src = new cv.Mat(video.height, video.width, cv.CV_8UC4);
-        let dst = new cv.Mat(video.height, video.width, cv.CV_8UC4);
+
+        // parameters for ShiTomasi corner detection
+        let [maxCorners, qualityLevel, minDistance, blockSize] = [10, 0.5, 7, 7];
+
+        // parameters for lucas kanade optical flow
+        let winSize = new cv.Size(15, 15);
+        let maxLevel = 2;
+        let criteria = new cv.TermCriteria(cv.TERM_CRITERIA_EPS | cv.TERM_CRITERIA_COUNT, 10, 0.03);
+
+        // create some random colors
+        let color = [];
+        for (let i = 0; i < maxCorners; i++) {
+            color.push(new cv.Scalar(parseInt(Math.random() * 255), parseInt(Math.random() * 255),
+                parseInt(Math.random() * 255), 255));
+        }
+
+        // take first frame and find corners in it
+        let oldFrame = new cv.Mat(video.height, video.width, cv.CV_8UC4);
+        cap.read(oldFrame);
+        let oldGray = new cv.Mat();
+        cv.cvtColor(oldFrame, oldGray, cv.COLOR_RGB2GRAY);
+        let p0 = new cv.Mat();
+        let none = new cv.Mat();
+
+        // // Create a mask image for drawing purposes
+        let zeroEle = new cv.Scalar(0, 0, 0, 255);
+        let mask = new cv.Mat(oldFrame.rows, oldFrame.cols, oldFrame.type(), zeroEle);
+
+        let frame = new cv.Mat(video.height, video.width, cv.CV_8UC4);
+        let frameGray = new cv.Mat();
+        let p1 = new cv.Mat();
+        let st = new cv.Mat();
+        let err = new cv.Mat();
 
         const FPS = 30;
         const processVideo = () => {
             try {
                 if (video.paused) {
                     // clean and stop.
-                    src.delete(); dst.delete();
+                    // src.delete(); dst.delete();
                     return;
                 }
                 let begin = Date.now();
-                let newMat = new cv.Mat();
-                src.convertTo(newMat, cv.CV_8UC4);
-                cap.read(newMat);
-                cv.cvtColor(newMat, newMat, cv.COLOR_RGB2GRAY, 0);
-                cv.Laplacian(newMat, dst, cv.CV_8UC4, 1, 1, 0, cv.BORDER_DEFAULT);
-                cv.imshow("canvasOutput", dst);
+                // start processing.
+                cap.read(frame);
+
+                cv.cvtColor(frame, frameGray, cv.COLOR_RGBA2GRAY);
+                cv.goodFeaturesToTrack(oldGray, p0, maxCorners, qualityLevel, minDistance, none, blockSize);
+
+                // calculate optical flow
+                cv.calcOpticalFlowPyrLK(oldGray, frameGray, p0, p1, st, err, winSize, maxLevel, criteria);
+
+                
+                // select good points
+                let goodNew = [];
+                let goodOld = [];
+                for (let i = 0; i < st.rows; i++) {
+                    if (st.data[i] === 1) {
+                        goodNew.push(new cv.Point(p1.data32F[i * 2], p1.data32F[i * 2 + 1]));
+                        goodOld.push(new cv.Point(p0.data32F[i * 2], p0.data32F[i * 2 + 1]));
+                    }
+                }
+
+                let sum = 0;
+                for (let i = 0; i< goodOld.length; i++) {
+                    sum = sum + goodOld[i].x;
+                    // console.log(goodNew[i].x);
+                }
+
+                let avgX = sum/goodOld.length;
+
+
+                // draw the tracks
+                for (let i = 0; i < goodNew.length; i++) {
+                    // cv.line(mask, goodNew[i], goodOld[i], color[i], 2);
+                    cv.circle(frame, goodNew[i], 5, color[i], -1);
+                }
+                cv.add(frame, mask, frame);
+
+                cv.imshow('canvasOutput', frame);
+
+                this.setState({
+                    previewFrameGeometry: {
+                        sx: avgX ? avgX : 0,
+                        sy: 0,
+                        sWidth: 270,
+                        sHeight: 480
+                    }
+                })
+
+                console.log(avgX);
+                // now update the previous frame and previous points
+                frameGray.copyTo(oldGray);
+                p0.delete(); p0 = null;
+                p0 = new cv.Mat(goodNew.length, 1, cv.CV_32FC2);
+                for (let i = 0; i < goodNew.length; i++) {
+                    p0.data32F[i * 2] = goodNew[i].x;
+                    p0.data32F[i * 2 + 1] = goodNew[i].y;
+                }
 
                 // schedule the next one.
                 let delay = 1000 / FPS - (Date.now() - begin);
