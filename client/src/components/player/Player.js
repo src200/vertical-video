@@ -5,6 +5,7 @@ import '../resizer/Resizer.scss'
 import { Slider, Button } from 'antd';
 import { Rnd } from 'react-rnd';
 const cv = window.cv;
+const SeamCarverImage = window.SeamCarverImage;
 
 class Player extends Component {
     constructor(props) {
@@ -26,8 +27,8 @@ class Player extends Component {
             previewFrameGeometry: {
                 sx: 0,
                 sy: 0,
-                sWidth: 100,
-                sHeight: 100
+                sWidth: 270,
+                sHeight: 480
             },
             resizerOpts: {
                 className: 'resizer',
@@ -81,7 +82,7 @@ class Player extends Component {
 
     play() {
         this.videoEl.current.play();
-        this.initVideoProcessing();
+        // this.initVideoProcessing();
     }
 
     pause() {
@@ -206,12 +207,12 @@ class Player extends Component {
         // schedule the first one.
         window.setTimeout(processVideo, 0);
     }
-
+    
     componentDidMount() {
         const ctx = this.canvasEl.current.getContext('2d');
         const previewCtx = this.previewCanvasEl.current.getContext('2d');
         ctx.imageSmoothingEnabled = true;
-        let imageData;
+        let imageData, seamCarverImage;
 
         const drawFrames = (videoDOM) => {
             if (!videoDOM.paused && !videoDOM.ended) {
@@ -222,11 +223,19 @@ class Player extends Component {
         }
 
         const drawPreviewFrames = () => {
+            seamCarverImage = new SeamCarverImage(ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height));
+            
             imageData = ctx.getImageData(this.state.previewFrameGeometry.sx,
                 this.state.previewFrameGeometry.sy, this.state.previewFrameGeometry.sWidth,
                 this.state.previewFrameGeometry.sHeight);
+            let difference = ctx.canvas.width - this.state.previewFrameGeometry.sWidth;
 
-            previewCtx.putImageData(imageData, 0, 0);
+            for (let i = difference; i > 0; i--) {
+                window.setTimeout(seamCarverImage.removeSeam(), 0);
+            }
+
+            
+            previewCtx.putImageData(seamCarverImage.seamPixels, 0, 0);
         }
 
         // event triggered on playing video
