@@ -157,7 +157,6 @@ class Player extends Component {
         const ctx = this.canvasEl.current.getContext('2d');
         const previewCtx = this.previewCanvasEl.current.getContext('2d');
         ctx.imageSmoothingEnabled = true;
-        let imageData, seamCarverImage;
 
         const drawFrames = (videoDOM) => {
             if (!videoDOM.paused && !videoDOM.ended) {
@@ -168,19 +167,11 @@ class Player extends Component {
         }
 
         const drawPreviewFrames = () => {
-            seamCarverImage = new SeamCarverImage(ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height));
-            
             imageData = ctx.getImageData(this.state.previewFrameGeometry.sx,
                 this.state.previewFrameGeometry.sy, this.state.previewFrameGeometry.sWidth,
                 this.state.previewFrameGeometry.sHeight);
-            let difference = ctx.canvas.width - this.state.previewFrameGeometry.sWidth;
-
-            for (let i = difference; i > 0; i--) {
-                window.setTimeout(seamCarverImage.removeSeam(), 0);
-            }
-
             
-            previewCtx.putImageData(seamCarverImage.seamPixels, 0, 0);
+            previewCtx.putImageData(imageData, 0, 0);
         }
 
         // event triggered on playing video
