@@ -5,7 +5,6 @@ import '../resizer/Resizer.scss'
 import { Slider, Button } from 'antd';
 import { Rnd } from 'react-rnd';
 const cv = window.cv;
-const SeamCarverImage = window.SeamCarverImage;
 
 class Player extends Component {
     constructor(props) {
@@ -82,7 +81,7 @@ class Player extends Component {
 
     play() {
         this.videoEl.current.play();
-        // this.initVideoProcessing();
+        this.initVideoProcessing();
     }
 
     pause() {
@@ -98,7 +97,7 @@ class Player extends Component {
         let cap = new cv.VideoCapture(video);
 
         // parameters for ShiTomasi corner detection
-        let [maxCorners, qualityLevel, minDistance, blockSize] = [20, 0.01, 10, 3];
+        let [maxCorners, qualityLevel, minDistance, blockSize] = [30, 0.1, 10, 3];
 
         // take first frame and find corners in it
         let srcFrame = new cv.Mat(video.height, video.width, cv.CV_8UC4);
@@ -123,12 +122,10 @@ class Player extends Component {
                 let sum = 0;
                 for (var i = 0; i < corners.rows; i++) {
                     let point = new cv.Point(corners.data32F[i], corners.data32F[(i * 2) + 1]);
-                    sum = sum + point.x;
+                    sum = sum + point.x - 40;
                 }
 
                 let avgX = sum / corners.rows;
-
-                // cv.imshow('canvasOutput', srcFrame);
 
                 this.setState({
                     previewFrameGeometry: {
@@ -157,6 +154,7 @@ class Player extends Component {
         const ctx = this.canvasEl.current.getContext('2d');
         const previewCtx = this.previewCanvasEl.current.getContext('2d');
         ctx.imageSmoothingEnabled = true;
+        let imageData;
 
         const drawFrames = (videoDOM) => {
             if (!videoDOM.paused && !videoDOM.ended) {
