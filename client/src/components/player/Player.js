@@ -122,22 +122,20 @@ class Player extends Component {
 
                 sum = 0;
                 for (var i = 0; i < corners.rows; i++) {
-                    point = new cv.Point(corners.data32F[i], corners.data32F[(i * 2) + 1]);
-                    sum = sum + point.x - 40;
+                    point = new cv.Point(corners.data32F[i * 2], corners.data32F[(i * 2) + 1]);
+                    sum = sum + point.x;
                 }
 
                 avgX = sum / corners.rows;
 
-                if (avgX - prevX > 20) {
-                    this.setState({
-                        previewFrameGeometry: {
-                            sx: avgX ? avgX : 0,
-                            sy: 0,
-                            sWidth: 270,
-                            sHeight: 480
-                        }
-                    })
-                }
+                this.setState({
+                    previewFrameGeometry: {
+                        sx: avgX ? avgX : 0,
+                        sy: 0,
+                        sWidth: 270,
+                        sHeight: 480
+                    }
+                });
 
                 console.log(avgX);
                 prevX = avgX;
@@ -179,6 +177,7 @@ class Player extends Component {
         // event triggered on playing video
         this.videoEl.current.addEventListener('play', (e) => {
             drawFrames(this.videoEl.current);
+            this.initVideoProcessing();
         });
 
         // event triggered while playing video
@@ -195,10 +194,10 @@ class Player extends Component {
         // event is fired on first frame has been loaded.
         this.videoEl.current.addEventListener('loadeddata', (e) => {
             // draw initial frame on canvas            
-            this.play();
-            setTimeout(() => {
-                this.pause();
-            }, 200);
+            // this.play();
+            // setTimeout(() => {
+            //     this.pause();
+            // }, 200);
         });
     }
 
@@ -210,23 +209,22 @@ class Player extends Component {
     render() {
         return (
             <div className="player">
-                <video width="500" height="400" src={this.props.videoSrc} ref={this.videoEl} style={{ display: 'none' }}>
+                <video width="640" height="480" controls src={this.props.videoSrc} ref={this.videoEl} >
                     Sorry, your browser doesn't support embedded videos.
                 </video>
                 <div className="canvas-container">
-                    <canvas ref={this.canvasEl} width={this.state.canvas.width} height={this.state.canvas.height}></canvas>
-                    <Rnd ref={c => { this.rnd = c; }} {...this.state.resizerOpts}></Rnd>
+                    <canvas ref={this.canvasEl} width={this.state.canvas.width} height={this.state.canvas.height} style={{ display: 'none' }}></canvas>
+                    {/* <Rnd ref={c => { this.rnd = c; }} {...this.state.resizerOpts}></Rnd>
                     <div>{this.state.video.currentAt} / {this.state.video.duration}</div>
                     <Slider step={0.01} className="canvas-timeline"
                         max={parseFloat(this.state.video.duration)}
                         value={parseFloat(this.state.video.currentAt)}
                         onChange={this.seek.bind(this)} />
                     <Button type="primary" onClick={this.play}>Play</Button>
-                    <Button type="primary" onClick={this.pause}>Pause</Button>
+                    <Button type="primary" onClick={this.pause}>Pause</Button> */}
                 </div>
                 <div className="preview-container">
                     <canvas ref={this.previewCanvasEl} width={this.state.previewFrameGeometry.sWidth} height={this.state.previewFrameGeometry.sHeight}></canvas>
-                    <canvas id="canvasOutput"></canvas>
                 </div>
 
             </div>
