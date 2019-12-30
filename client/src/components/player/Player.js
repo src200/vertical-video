@@ -106,6 +106,7 @@ class Player extends Component {
         let corners = new cv.Mat();
 
         const FPS = 30;
+        let begin, sum, point, avgX, prevX;
         const processVideo = () => {
             try {
                 if (video.paused) {
@@ -114,29 +115,32 @@ class Player extends Component {
                     return;
                 }
 
-                let begin = Date.now();
+                begin = Date.now();
                 cap.read(srcFrame);
                 cv.cvtColor(srcFrame, grayFrame, cv.COLOR_RGBA2GRAY);
                 cv.goodFeaturesToTrack(grayFrame, corners, maxCorners, qualityLevel, minDistance, new cv.Mat(), blockSize);
 
-                let sum = 0;
+                sum = 0;
                 for (var i = 0; i < corners.rows; i++) {
-                    let point = new cv.Point(corners.data32F[i], corners.data32F[(i * 2) + 1]);
+                    point = new cv.Point(corners.data32F[i], corners.data32F[(i * 2) + 1]);
                     sum = sum + point.x - 40;
                 }
 
-                let avgX = sum / corners.rows;
+                avgX = sum / corners.rows;
 
-                this.setState({
-                    previewFrameGeometry: {
-                        sx: avgX ? avgX : 0,
-                        sy: 0,
-                        sWidth: 270,
-                        sHeight: 480
-                    }
-                })
+                if (avgX - prevX > 20) {
+                    this.setState({
+                        previewFrameGeometry: {
+                            sx: avgX ? avgX : 0,
+                            sy: 0,
+                            sWidth: 270,
+                            sHeight: 480
+                        }
+                    })
+                }
 
                 console.log(avgX);
+                prevX = avgX;
 
                 // schedule the next one.
                 let delay = 1000 / FPS - (Date.now() - begin);
@@ -149,7 +153,7 @@ class Player extends Component {
         // schedule the first one.
         window.setTimeout(processVideo, 0);
     }
-    
+
     componentDidMount() {
         const ctx = this.canvasEl.current.getContext('2d');
         const previewCtx = this.previewCanvasEl.current.getContext('2d');
@@ -168,7 +172,7 @@ class Player extends Component {
             imageData = ctx.getImageData(this.state.previewFrameGeometry.sx,
                 this.state.previewFrameGeometry.sy, this.state.previewFrameGeometry.sWidth,
                 this.state.previewFrameGeometry.sHeight);
-            
+
             previewCtx.putImageData(imageData, 0, 0);
         }
 
