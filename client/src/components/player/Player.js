@@ -97,7 +97,7 @@ class Player extends Component {
         let cap = new cv.VideoCapture(video);
 
         // parameters for ShiTomasi corner detection
-        let [maxCorners, qualityLevel, minDistance, blockSize] = [30, 0.01, 10, 3];
+        let [maxCorners, qualityLevel, minDistance, blockSize] = [50, 0.01, 7, 7];
 
         // take first frame and find corners in it
         let srcFrame = new cv.Mat(video.height, video.width, cv.CV_8UC4);
@@ -106,7 +106,8 @@ class Player extends Component {
         let corners = new cv.Mat();
         let goodFeatures = [];
 
-        let sum, point, avgX, prevX;
+        let begin, sum, point, avgX, prevX;
+        const FPS = 24;
         const processVideo = () => {
             try {
                 if (video.paused) {
@@ -115,6 +116,7 @@ class Player extends Component {
                     return;
                 }
 
+                begin = Date.now();
                 cap.read(srcFrame);
                 cv.cvtColor(srcFrame, grayFrame, cv.COLOR_RGBA2GRAY);
                 cv.goodFeaturesToTrack(grayFrame, corners, maxCorners, qualityLevel, minDistance, new cv.Mat(), blockSize);
@@ -122,9 +124,9 @@ class Player extends Component {
                 sum = 0;
                 goodFeatures = [];
                 for (var i = 0; i < corners.rows; i++) {
-                    point = new cv.Point(corners.data32F[i], corners.data32F[(i * 2) + 1]);
+                    point = new cv.Point(corners.data32F[i * 2], corners.data32F[(i * 2) + 1]);
                     goodFeatures.push(point);
-                    sum = sum + (point.x - 100);
+                    sum = sum + (point.x - 90);
                 }
 
                 avgX = sum / corners.rows;
@@ -143,13 +145,11 @@ class Player extends Component {
                 }
 
                 cv.imshow('canvasOutput', srcFrame);
-
-
-                console.log(avgX);
                 prevX = avgX;
 
                 // schedule the next one.
-                window.setTimeout(processVideo, 0);
+                let delay = 1000 / FPS - (Date.now() - begin);
+                window.setTimeout(processVideo, delay);
             } catch (err) {
                 console.error(err);
             }
