@@ -104,9 +104,9 @@ class Player extends Component {
         let grayFrame = new cv.Mat(video.height, video.width, cv.CV_8UC4);
 
         let corners = new cv.Mat();
+        let goodFeatures = [];
 
-        const FPS = 30;
-        let begin, sum, point, avgX, prevX;
+        let sum, point, avgX, prevX;
         const processVideo = () => {
             try {
                 if (video.paused) {
@@ -115,15 +115,16 @@ class Player extends Component {
                     return;
                 }
 
-                begin = Date.now();
                 cap.read(srcFrame);
                 cv.cvtColor(srcFrame, grayFrame, cv.COLOR_RGBA2GRAY);
                 cv.goodFeaturesToTrack(grayFrame, corners, maxCorners, qualityLevel, minDistance, new cv.Mat(), blockSize);
 
                 sum = 0;
+                goodFeatures = [];
                 for (var i = 0; i < corners.rows; i++) {
-                    point = new cv.Point(corners.data32F[i * 2], corners.data32F[(i * 2) + 1]);
-                    sum = sum + (point.x - 80);
+                    point = new cv.Point(corners.data32F[i], corners.data32F[(i * 2) + 1]);
+                    goodFeatures.push(point);
+                    sum = sum + (point.x - 100);
                 }
 
                 avgX = sum / corners.rows;
@@ -137,12 +138,18 @@ class Player extends Component {
                     }
                 });
 
+                for (let i = 0; i < goodFeatures.length; i++) {
+                    cv.circle(srcFrame, goodFeatures[i], 3, new cv.Scalar(10, 200, 10), -1);
+                }
+
+                cv.imshow('canvasOutput', srcFrame);
+
+
                 console.log(avgX);
                 prevX = avgX;
 
                 // schedule the next one.
-                let delay = 1000 / FPS - (Date.now() - begin);
-                setTimeout(processVideo, delay);
+                window.setTimeout(processVideo, 0);
             } catch (err) {
                 console.error(err);
             }
@@ -226,6 +233,7 @@ class Player extends Component {
                 <div className="preview-container">
                     <canvas ref={this.previewCanvasEl} width={this.state.previewFrameGeometry.sWidth} height={this.state.previewFrameGeometry.sHeight}></canvas>
                 </div>
+                <canvas id="canvasOutput"></canvas>
             </div>
         )
     }
