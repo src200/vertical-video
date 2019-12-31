@@ -122,8 +122,8 @@ class Player extends Component {
 
                 sum = 0;
                 for (var i = 0; i < corners.rows; i++) {
-                    point = new cv.Point(corners.data32F[i], corners.data32F[(i * 2) + 1]);
-                    sum = sum + point.x - 80;
+                    point = new cv.Point(corners.data32F[i * 2], corners.data32F[(i * 2) + 1]);
+                    sum = sum + (point.x - 80);
                 }
 
                 avgX = sum / corners.rows;
@@ -226,7 +226,6 @@ class Player extends Component {
                 <div className="preview-container">
                     <canvas ref={this.previewCanvasEl} width={this.state.previewFrameGeometry.sWidth} height={this.state.previewFrameGeometry.sHeight}></canvas>
                 </div>
-
             </div>
         )
     }
