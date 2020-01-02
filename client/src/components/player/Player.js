@@ -97,7 +97,7 @@ class Player extends Component {
         let cap = new cv.VideoCapture(video);
 
         // parameters for ShiTomasi corner detection
-        let [maxCorners, qualityLevel, minDistance, blockSize] = [50, 0.01, 7, 7];
+        let [maxCorners, qualityLevel, minDistance, blockSize] = [400, 0.01, 3, 3];
 
         // take first frame and find corners in it
         let srcFrame = new cv.Mat(video.height, video.width, cv.CV_8UC4);
@@ -126,7 +126,7 @@ class Player extends Component {
                 for (var i = 0; i < corners.rows; i++) {
                     point = new cv.Point(corners.data32F[i * 2], corners.data32F[(i * 2) + 1]);
                     goodFeatures.push(point);
-                    sum = sum + (point.x - 90);
+                    sum = sum + (point.x - 130);
                 }
 
                 avgX = sum / corners.rows;
@@ -135,8 +135,8 @@ class Player extends Component {
                     previewFrameGeometry: {
                         sx: avgX ? avgX : 0,
                         sy: 0,
-                        sWidth: 270,
-                        sHeight: 480
+                        sWidth: video.videoHeight * (9/16),
+                        sHeight: video.videoHeight
                     }
                 });
 
