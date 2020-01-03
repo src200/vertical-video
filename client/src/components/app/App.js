@@ -18,10 +18,14 @@ class App extends Component {
         this.setAspectRatio = this.setAspectRatio.bind(this);
     }
 
-    captureVideoSrc(fileObj) {
-        if (fileObj) {
+    captureVideoSrc(src) {
+        if (src instanceof File) {
             this.setState( {
-                videoSrc: URL.createObjectURL(fileObj)
+                videoSrc: URL.createObjectURL(src)
+            });
+        } else {
+            this.setState( {
+                videoSrc: src
             });
         }
     }

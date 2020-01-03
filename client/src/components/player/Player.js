@@ -135,8 +135,8 @@ class Player extends Component {
                     previewFrameGeometry: {
                         sx: avgX ? avgX : 0,
                         sy: 0,
-                        sWidth: video.videoHeight * (9/16),
-                        sHeight: video.videoHeight
+                        sWidth: video.height * (9/16),
+                        sHeight: video.height
                     }
                 });
 
