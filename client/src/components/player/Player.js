@@ -180,6 +180,7 @@ class Player extends Component {
 
         let scd = Scd(this.videoEl.current,{
             mode: 'PlaybackMode',
+            minSceneDuration: 1,
             threshold: 10
         });
 
@@ -190,8 +191,8 @@ class Player extends Component {
                 previewFrameGeometry: {
                     sx: this.state.cutVideoAt ? this.state.cutVideoAt : 0,
                     sy: 0,
-                    sWidth:  this.videoEl.current.height * (9/16),
-                    sHeight: this.videoEl.current.height
+                    sWidth:  this.videoEl.current.videoHeight * (9/16),
+                    sHeight: this.videoEl.current.videoHeight
                 }
             });
 
