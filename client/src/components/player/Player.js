@@ -5,6 +5,7 @@ import '../resizer/Resizer.scss'
 import { Slider, Button } from 'antd';
 import { Rnd } from 'react-rnd';
 const cv = window.cv;
+const Scd = window.Scd;
 
 class Player extends Component {
     constructor(props) {
@@ -64,7 +65,8 @@ class Player extends Component {
                         }
                     });
                 }
-            }
+            },
+            cutVideoAt: 0
         };
 
         this.reqAnimeId = '';
@@ -132,19 +134,14 @@ class Player extends Component {
                 avgX = sum / corners.rows;
 
                 this.setState({
-                    previewFrameGeometry: {
-                        sx: avgX ? avgX : 0,
-                        sy: 0,
-                        sWidth: video.height * (9/16),
-                        sHeight: video.height
-                    }
+                    cutVideoAt: avgX ? avgX :prevX
                 });
 
-                for (let i = 0; i < goodFeatures.length; i++) {
-                    cv.circle(srcFrame, goodFeatures[i], 3, new cv.Scalar(10, 200, 10), -1);
-                }
+                // for (let i = 0; i < goodFeatures.length; i++) {
+                //     cv.circle(srcFrame, goodFeatures[i], 3, new cv.Scalar(10, 200, 10), -1);
+                // }
 
-                cv.imshow('canvasOutput', srcFrame);
+                // cv.imshow('canvasOutput', srcFrame);
                 prevX = avgX;
 
                 // schedule the next one.
@@ -181,10 +178,30 @@ class Player extends Component {
             previewCtx.putImageData(imageData, 0, 0);
         }
 
+        let scd = Scd(this.videoEl.current,{
+            mode: 'PlaybackMode',
+            threshold: 10
+        });
+
+        this.videoEl.current.addEventListener('scenechange', (e) => {
+            console.log('New scene change detected at', e.timeStamp);
+            console.log('avg :', this.state.cutVideoAt);
+            this.setState({
+                previewFrameGeometry: {
+                    sx: this.state.cutVideoAt ? this.state.cutVideoAt : 0,
+                    sy: 0,
+                    sWidth:  this.videoEl.current.height * (9/16),
+                    sHeight: this.videoEl.current.height
+                }
+            });
+
+        });
+
         // event triggered on playing video
         this.videoEl.current.addEventListener('play', (e) => {
             drawFrames(this.videoEl.current);
             this.initVideoProcessing();
+            scd.start();
         });
 
         // event triggered while playing video
