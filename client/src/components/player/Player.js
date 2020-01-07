@@ -161,6 +161,7 @@ class Player extends Component {
         const previewCtx = this.previewCanvasEl.current.getContext('2d');
         ctx.imageSmoothingEnabled = true;
         let imageData;
+        let scd;
 
         const drawFrames = (videoDOM) => {
             if (!videoDOM.paused && !videoDOM.ended) {
@@ -178,11 +179,7 @@ class Player extends Component {
             previewCtx.putImageData(imageData, 0, 0);
         }
 
-        let scd = Scd(this.videoEl.current,{
-            mode: 'PlaybackMode',
-            minSceneDuration: 1,
-            threshold: 10
-        });
+        
 
         this.videoEl.current.addEventListener('scenechange', (e) => {
             console.log('New scene change detected at', e.timeStamp);
@@ -191,11 +188,10 @@ class Player extends Component {
                 previewFrameGeometry: {
                     sx: this.state.cutVideoAt ? this.state.cutVideoAt : 0,
                     sy: 0,
-                    sWidth:  this.videoEl.current.videoHeight * (9/16),
-                    sHeight: this.videoEl.current.videoHeight
+                    sWidth:  this.videoEl.current.height * (9/16),
+                    sHeight: this.videoEl.current.height
                 }
             });
-
         });
 
         // event triggered on playing video
@@ -223,6 +219,11 @@ class Player extends Component {
             // setTimeout(() => {
             //     this.pause();
             // }, 200);
+
+            scd = Scd(this.videoEl.current,{
+                mode: 'PlaybackMode',
+                threshold: 9
+            });
         });
     }
 
