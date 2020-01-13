@@ -137,6 +137,15 @@ class Player extends Component {
                     cutVideoAt: avgX ? avgX :prevX
                 });
 
+                // this.setState({
+                //     previewFrameGeometry: {
+                //         sx: avgX ? avgX : prevX,
+                //         sy: 0,
+                //         sWidth:  this.videoEl.current.height * (9/16),
+                //         sHeight: this.videoEl.current.height
+                //     }
+                // });
+
                 // for (let i = 0; i < goodFeatures.length; i++) {
                 //     cv.circle(srcFrame, goodFeatures[i], 3, new cv.Scalar(10, 200, 10), -1);
                 // }
@@ -144,6 +153,9 @@ class Player extends Component {
                 // cv.imshow('canvasOutput', srcFrame);
                 prevX = avgX;
 
+                // console.log('x:', avgX);
+                // console.log('t:', begin);
+                
                 // schedule the next one.
                 let delay = 1000 / FPS - (Date.now() - begin);
                 window.setTimeout(processVideo, delay);
