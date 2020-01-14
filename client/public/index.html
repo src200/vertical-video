@@ -36,7 +36,14 @@
       To begin the development, run `npm start` or `yarn start`.
       To create a production bundle, use `npm run build` or `yarn build`.
     -->
-    <script src="https://docs.opencv.org/master/opencv.js" type="text/javascript"></script>
+    <script>
+      var Module = {
+        wasmBinaryFile: 'https://huningxin.github.io/opencv.js/build/wasm/opencv_js.wasm',
+        _main: function() {console.log('OpenCV wasm is ready..')}
+      };
+    </script>
+    <script async src="https://huningxin.github.io/opencv.js/build/wasm/opencv.js"></script>
+    <!-- <script src="https://docs.opencv.org/master/opencv.js" type="text/javascript"></script> -->
     <script src="%PUBLIC_URL%/scd.js" type="text/javascript"></script>
   </body>
 </html>

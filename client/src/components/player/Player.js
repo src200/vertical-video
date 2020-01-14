@@ -94,12 +94,24 @@ class Player extends Component {
         this.videoEl.current.currentTime = seekTo;
     }
 
+    exportVideo(blob) {
+        const vid = document.createElement('video');
+        vid.src = URL.createObjectURL(blob);
+        vid.controls = true;
+        document.body.appendChild(vid);
+        const a = document.createElement('a');
+        a.download = 'output' + new Date() + '.mp4';
+        a.href = vid.src;
+        a.textContent = 'Download the video';
+        document.body.appendChild(a);
+    }
+
     initVideoProcessing() {
         let video = this.videoEl.current;
         let cap = new cv.VideoCapture(video);
 
         // parameters for ShiTomasi corner detection
-        let [maxCorners, qualityLevel, minDistance, blockSize] = [400, 0.01, 3, 3];
+        let [maxCorners, qualityLevel, minDistance, blockSize] = [1000, 0.01, 3, 3];
 
         // take first frame and find corners in it
         let srcFrame = new cv.Mat(video.height, video.width, cv.CV_8UC4);
@@ -110,11 +122,23 @@ class Player extends Component {
 
         let begin, sum, point, avgX, prevX;
         const FPS = 24;
+
+        const chunks = []; // here we will store our recorded media chunks (Blobs)
+        const stream = this.previewCanvasEl.current.captureStream(); // grab our canvas MediaStream
+        const rec = new MediaRecorder(stream); // init the recorder
+        
+        // every time the recorder has new data, we will store it in our array
+        rec.ondataavailable = e => chunks.push(e.data);
+        // only when the recorder stops, we construct a complete Blob from all the chunks
+        rec.onstop = e => this.exportVideo(new Blob(chunks, { type: 'video/mp4' }));
+        rec.start();
+
         const processVideo = () => {
             try {
-                if (video.paused) {
+                if (video.paused || video.ended) {
                     // clean and stop.
                     // src.delete(); dst.delete();
+                    rec.stop();
                     return;
                 }
 
@@ -133,18 +157,18 @@ class Player extends Component {
 
                 avgX = sum / corners.rows;
 
-                this.setState({
-                    cutVideoAt: avgX ? avgX :prevX
-                });
-
                 // this.setState({
-                //     previewFrameGeometry: {
-                //         sx: avgX ? avgX : prevX,
-                //         sy: 0,
-                //         sWidth:  this.videoEl.current.height * (9/16),
-                //         sHeight: this.videoEl.current.height
-                //     }
+                //     cutVideoAt: avgX ? avgX :prevX
                 // });
+
+                this.setState({
+                    previewFrameGeometry: {
+                        sx: avgX ? avgX : 0,
+                        sy: 0,
+                        sWidth: this.videoEl.current.height * (9 / 16),
+                        sHeight: this.videoEl.current.height
+                    }
+                });
 
                 // for (let i = 0; i < goodFeatures.length; i++) {
                 //     cv.circle(srcFrame, goodFeatures[i], 3, new cv.Scalar(10, 200, 10), -1);
@@ -155,7 +179,7 @@ class Player extends Component {
 
                 // console.log('x:', avgX);
                 // console.log('t:', begin);
-                
+
                 // schedule the next one.
                 let delay = 1000 / FPS - (Date.now() - begin);
                 window.setTimeout(processVideo, delay);
@@ -191,7 +215,7 @@ class Player extends Component {
             previewCtx.putImageData(imageData, 0, 0);
         }
 
-        
+
 
         this.videoEl.current.addEventListener('scenechange', (e) => {
             console.log('New scene change detected at', e.timeStamp);
@@ -200,7 +224,7 @@ class Player extends Component {
                 previewFrameGeometry: {
                     sx: this.state.cutVideoAt ? this.state.cutVideoAt : 0,
                     sy: 0,
-                    sWidth:  this.videoEl.current.height * (9/16),
+                    sWidth: this.videoEl.current.height * (9 / 16),
                     sHeight: this.videoEl.current.height
                 }
             });
@@ -210,7 +234,7 @@ class Player extends Component {
         this.videoEl.current.addEventListener('play', (e) => {
             drawFrames(this.videoEl.current);
             this.initVideoProcessing();
-            scd.start();
+            // scd.start();
         });
 
         // event triggered while playing video
@@ -232,7 +256,7 @@ class Player extends Component {
             //     this.pause();
             // }, 200);
 
-            scd = Scd(this.videoEl.current,{
+            scd = Scd(this.videoEl.current, {
                 mode: 'PlaybackMode',
                 threshold: 9
             });
