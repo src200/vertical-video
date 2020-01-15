@@ -106,6 +106,35 @@ class Player extends Component {
         document.body.appendChild(a);
     }
 
+    startMediaRecord() {
+        const chunks = []; // here we will store our recorded media chunks (Blobs)
+        // every time the recorder has new data, we will store it in our array
+        const stream = this.previewCanvasEl.current.captureStream(); // grab our canvas MediaStream
+        const rec = new MediaRecorder(stream); // init the recorder
+
+        rec.ondataavailable = e => chunks.push(e.data);
+        // only when the recorder stops, we construct a complete Blob from all the chunks
+        rec.onstop = e => this.exportVideo(new Blob(chunks, { type: 'video/mp4' }));
+        // start recording
+        rec.start();
+    }
+
+    detectSceneChange(currFrame, prevFrame) {
+        let currVec = new cv.MatVector();
+        currVec.push_back(currFrame);
+        let prevVec = new cv.MatVector();
+        prevVec.push_back(prevFrame);
+
+        let currHist = new cv.Mat();
+        let prevHist = new cv.Mat();
+
+        cv.calcHist(currVec, [0], new cv.Mat(), currHist, [256], [0, 255], false);
+        cv.calcHist(prevVec, [0], new cv.Mat(), prevHist, [256], [0, 255], false);
+
+        let cmp = cv.compareHist(currHist, prevHist, cv.HISTCMP_BHATTACHARYYA);
+        console.log(cmp)
+    }
+
     initVideoProcessing() {
         let video = this.videoEl.current;
         let cap = new cv.VideoCapture(video);
@@ -116,29 +145,21 @@ class Player extends Component {
         // take first frame and find corners in it
         let srcFrame = new cv.Mat(video.height, video.width, cv.CV_8UC4);
         let grayFrame = new cv.Mat(video.height, video.width, cv.CV_8UC4);
+        let prevFrame = new cv.Mat(video.height, video.width, cv.CV_8UC4);
 
         let corners = new cv.Mat();
         let goodFeatures = [];
 
         let begin, sum, point, avgX, prevX;
         const FPS = 24;
-
-        const chunks = []; // here we will store our recorded media chunks (Blobs)
-        const stream = this.previewCanvasEl.current.captureStream(); // grab our canvas MediaStream
-        const rec = new MediaRecorder(stream); // init the recorder
-        
-        // every time the recorder has new data, we will store it in our array
-        rec.ondataavailable = e => chunks.push(e.data);
-        // only when the recorder stops, we construct a complete Blob from all the chunks
-        rec.onstop = e => this.exportVideo(new Blob(chunks, { type: 'video/mp4' }));
-        rec.start();
+        // this.startMediaRecord(rec);
 
         const processVideo = () => {
             try {
                 if (video.paused || video.ended) {
                     // clean and stop.
                     // src.delete(); dst.delete();
-                    rec.stop();
+                    // rec.stop();
                     return;
                 }
 
@@ -175,10 +196,13 @@ class Player extends Component {
                 // }
 
                 // cv.imshow('canvasOutput', srcFrame);
+                this.detectSceneChange(srcFrame, prevFrame);
                 prevX = avgX;
 
                 // console.log('x:', avgX);
                 // console.log('t:', begin);
+
+                prevFrame = srcFrame;
 
                 // schedule the next one.
                 let delay = 1000 / FPS - (Date.now() - begin);
