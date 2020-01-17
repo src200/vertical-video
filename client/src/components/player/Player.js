@@ -105,17 +105,17 @@ class Player extends Component {
         document.body.appendChild(a);
     }
 
-    startMediaRecord() {
-        const chunks = []; // here we will store our recorded media chunks (Blobs)
+    startMediaRecord(chunks) {
         // every time the recorder has new data, we will store it in our array
         const stream = this.previewCanvasEl.current.captureStream(); // grab our canvas MediaStream
         const rec = new MediaRecorder(stream); // init the recorder
-
         rec.ondataavailable = e => chunks.push(e.data);
         // only when the recorder stops, we construct a complete Blob from all the chunks
-        rec.onstop = e => this.exportVideo(new Blob(chunks, { type: 'video/mp4' }));
+        // rec.onstop = e => this.exportVideo(new Blob(chunks, { type: 'video/webm;codecs=vp9' }));
         // start recording
         rec.start();
+
+        return rec;
     }
 
     detectSceneChange(currFrame, prevFrame) {
@@ -139,26 +139,30 @@ class Player extends Component {
         let cap = new cv.VideoCapture(video);
 
         // parameters for ShiTomasi corner detection
-        let [maxCorners, qualityLevel, minDistance, blockSize] = [3000, 0.01, 3, 3];
+        let [maxCorners, qualityLevel, minDistance, blockSize] = [1000, 0.001, 3, 3];
 
         // take first frame and find corners in it
         let srcFrame = new cv.Mat(video.height, video.width, cv.CV_8UC4);
         let grayFrame = new cv.Mat(video.height, video.width, cv.CV_8UC4);
-        let prevFrame = new cv.Mat(video.height, video.width, cv.CV_8UC4);
 
         let corners = new cv.Mat();
         let goodFeatures = [];
 
-        let begin, sum, point, avgX, prevX;
-        const FPS = 24;
-        // this.startMediaRecord(rec);
+        let begin, sum, point, avgX;
+        const FPS = 24;        
         const kf = new KalmanFilter({R: 0.01, Q: 4});
+
+        // here we will store our recorded media chunks (Blobs)
+        const chunks = [];
+        const record = this.startMediaRecord(chunks);
+
         const processVideo = () => {
             try {
                 if (video.paused || video.ended) {
                     // clean and stop.
                     // src.delete(); dst.delete();
-                    // rec.stop();
+                    record.stop();
+                    record.onstop = e => this.exportVideo(new Blob(chunks, { type: 'video/mp4' }));
                     return;
                 }
 
@@ -177,13 +181,9 @@ class Player extends Component {
 
                 avgX = sum / corners.rows;
 
-                // this.setState({
-                //     cutVideoAt: avgX ? avgX :prevX
-                // });
-
                 this.setState({
                     previewFrameGeometry: {
-                        sx: kf.filter(avgX) ? kf.filter(avgX) : 0,
+                        sx: avgX ? kf.filter(avgX) : 0,
                         sy: 0,
                         sWidth: this.videoEl.current.height * (9 / 16),
                         sHeight: this.videoEl.current.height
@@ -196,12 +196,10 @@ class Player extends Component {
 
                 // cv.imshow('canvasOutput', srcFrame);
                 // this.detectSceneChange(srcFrame, prevFrame);
-                prevX = avgX;
+
                 console.log('x', avgX);
                 console.log('kalman x:', kf.filter(avgX));
                 // console.log('t:', begin);
-
-                prevFrame = srcFrame;
 
                 // schedule the next one.
                 let delay = 1000 / FPS - (Date.now() - begin);
@@ -237,21 +235,6 @@ class Player extends Component {
             previewCtx.putImageData(imageData, 0, 0);
         }
 
-
-
-        this.videoEl.current.addEventListener('scenechange', (e) => {
-            console.log('New scene change detected at', e.timeStamp);
-            console.log('avg :', this.state.cutVideoAt);
-            this.setState({
-                previewFrameGeometry: {
-                    sx: this.state.cutVideoAt ? this.state.cutVideoAt : 0,
-                    sy: 0,
-                    sWidth: this.videoEl.current.height * (9 / 16),
-                    sHeight: this.videoEl.current.height
-                }
-            });
-        });
-
         // event triggered on playing video
         this.videoEl.current.addEventListener('play', (e) => {
             drawFrames(this.videoEl.current);
@@ -269,8 +252,8 @@ class Player extends Component {
             });
         });
 
-        // event is fired on first frame has been loaded.
-        this.videoEl.current.addEventListener('loadeddata', (e) => {
+        // event is fired when video is ready to play.
+        this.videoEl.current.addEventListener('canplay', (e) => {
             // draw initial frame on canvas            
             // this.play();
             // setTimeout(() => {
