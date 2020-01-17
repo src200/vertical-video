@@ -5,7 +5,7 @@ import '../resizer/Resizer.scss'
 import { Slider, Button } from 'antd';
 import { Rnd } from 'react-rnd';
 const cv = window.cv;
-const Scd = window.Scd;
+const KalmanFilter = window.KalmanFilter;
 
 class Player extends Component {
     constructor(props) {
@@ -65,8 +65,7 @@ class Player extends Component {
                         }
                     });
                 }
-            },
-            cutVideoAt: 0
+            }
         };
 
         this.reqAnimeId = '';
@@ -153,7 +152,7 @@ class Player extends Component {
         let begin, sum, point, avgX, prevX;
         const FPS = 24;
         // this.startMediaRecord(rec);
-
+        const kf = new KalmanFilter({R: 0.01, Q: 4});
         const processVideo = () => {
             try {
                 if (video.paused || video.ended) {
@@ -184,7 +183,7 @@ class Player extends Component {
 
                 this.setState({
                     previewFrameGeometry: {
-                        sx: avgX ? avgX : 0,
+                        sx: kf.filter(avgX) ? kf.filter(avgX) : 0,
                         sy: 0,
                         sWidth: this.videoEl.current.height * (9 / 16),
                         sHeight: this.videoEl.current.height
@@ -196,10 +195,10 @@ class Player extends Component {
                 // }
 
                 // cv.imshow('canvasOutput', srcFrame);
-                this.detectSceneChange(srcFrame, prevFrame);
+                // this.detectSceneChange(srcFrame, prevFrame);
                 prevX = avgX;
-
-                // console.log('x:', avgX);
+                console.log('x', avgX);
+                console.log('kalman x:', kf.filter(avgX));
                 // console.log('t:', begin);
 
                 prevFrame = srcFrame;
@@ -258,7 +257,6 @@ class Player extends Component {
         this.videoEl.current.addEventListener('play', (e) => {
             drawFrames(this.videoEl.current);
             this.initVideoProcessing();
-            // scd.start();
         });
 
         // event triggered while playing video
