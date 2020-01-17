@@ -220,7 +220,6 @@ class Player extends Component {
         const previewCtx = this.previewCanvasEl.current.getContext('2d');
         ctx.imageSmoothingEnabled = true;
         let imageData;
-        let scd;
 
         const drawFrames = (videoDOM) => {
             if (!videoDOM.paused && !videoDOM.ended) {
@@ -277,11 +276,6 @@ class Player extends Component {
             // setTimeout(() => {
             //     this.pause();
             // }, 200);
-
-            scd = Scd(this.videoEl.current, {
-                mode: 'PlaybackMode',
-                threshold: 9
-            });
         });
     }
 
