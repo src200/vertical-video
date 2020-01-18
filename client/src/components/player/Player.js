@@ -4,6 +4,7 @@ import '../resizer/Resizer.scss'
 // import Resizer from '../resizer/Resizer';
 import { Slider, Button } from 'antd';
 import { Rnd } from 'react-rnd';
+
 const cv = window.cv;
 const KalmanFilter = window.KalmanFilter;
 
@@ -161,8 +162,8 @@ class Player extends Component {
                 if (video.paused || video.ended) {
                     // clean and stop.
                     // src.delete(); dst.delete();
-                    record.stop();
-                    record.onstop = e => this.exportVideo(new Blob(chunks, { type: 'video/mp4' }));
+                    // record.stop();
+                    // record.onstop = e => this.exportVideo(new Blob(chunks, { type: 'video/mp4' }));
                     return;
                 }
 
@@ -176,7 +177,7 @@ class Player extends Component {
                 for (var i = 0; i < corners.rows; i++) {
                     point = new cv.Point(corners.data32F[i * 2], corners.data32F[(i * 2) + 1]);
                     goodFeatures.push(point);
-                    sum = sum + (point.x - 140);
+                    sum = sum + (point.x - 135);
                 }
 
                 avgX = sum / corners.rows;
@@ -197,8 +198,8 @@ class Player extends Component {
                 // cv.imshow('canvasOutput', srcFrame);
                 // this.detectSceneChange(srcFrame, prevFrame);
 
-                console.log('x', avgX);
-                console.log('kalman x:', kf.filter(avgX));
+                // console.log('x', avgX);
+                // console.log('kalman x:', kf.filter(avgX));
                 // console.log('t:', begin);
 
                 // schedule the next one.
