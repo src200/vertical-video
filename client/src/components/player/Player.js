@@ -2,9 +2,11 @@ import React, { Component } from 'react';
 import './Player.scss';
 // import '../resizer/Resizer.scss'
 import Timeline from '../timeline/Timeline';
+import Canvas from '../canvas/Canvas';
 // import Resizer from '../resizer/Resizer';
 import { Row, Col, Slider, Button } from 'antd';
 import { Rnd } from 'react-rnd';
+
 
 const cv = window.cv;
 const KalmanFilter = window.KalmanFilter;
@@ -14,19 +16,10 @@ class Player extends Component {
         super(props);
 
         this.state = {
-            video: {
-                framesPerSec: 30,
-                percentPlayed: 0.0,
-                duration: 0.0, // sec
-                currentAt: 0.0 // sec
+            hiddenFrame: {
+
             },
-            canvas: {
-                x: 0,
-                y: 0,
-                width: 640,
-                height: 480
-            },
-            previewFrameGeometry: {
+            previewFrame: {
                 sx: 0,
                 sy: 0,
                 sWidth: 270,
@@ -49,7 +42,7 @@ class Player extends Component {
                 },
                 onDrag: (e, d) => {
                     this.setState({
-                        previewFrameGeometry: {
+                        previewFrame: {
                             sx: d.x,
                             sy: d.y,
                             sWidth: e.target.offsetWidth,
@@ -59,7 +52,7 @@ class Player extends Component {
                 },
                 onResize: (e, direction, ref, delta, position) => {
                     this.setState({
-                        previewFrameGeometry: {
+                        previewFrame: {
                             sx: position.x,
                             sy: position.y,
                             sWidth: ref.offsetWidth,
@@ -68,73 +61,31 @@ class Player extends Component {
                     });
                 }
             },
-            showTimeline: false
+            frameBuffer: []
         };
 
-        this.reqAnimeId = '';
+        // frame constructor
+        this.frame = {
+            num: 0, // frame number,
+            src: '', // src of frame( from video)
+            sx: 0, // x value of src image
+            sy: 0, // y value of src image
+            dx: 0, // x value of destination canvas
+            dy: 0, // y value of destination canvas
+            oh: 0, // original height of video
+            ow: 0, // original width of video
+            h: 0, //  height of frame
+            w: 0, //  width of frame
+            t: 0, // time of frame in the video
+            ar: 9/16 // aspect ratio of frame( this could change in future for 1:1)
+        }
 
-        this.play = this.play.bind(this);
-        this.pause = this.pause.bind(this);
-        this.seek = this.seek.bind(this);
+        this.reqAnimeId = '';
 
         // create refs to store the video and canvas DOM element
         this.videoEl = React.createRef();
         this.canvasEl = React.createRef();
         this.previewCanvasEl = React.createRef();
-    }
-
-    play() {
-        this.videoEl.current.play();
-        this.initVideoProcessing();
-    }
-
-    pause() {
-        this.videoEl.current.pause();
-    }
-
-    seek(seekTo) {
-        this.videoEl.current.currentTime = seekTo;
-    }
-
-    exportVideo(blob) {
-        const vid = document.createElement('video');
-        vid.src = URL.createObjectURL(blob);
-        vid.controls = true;
-        document.body.appendChild(vid);
-        const a = document.createElement('a');
-        a.download = 'output' + new Date() + '.mp4';
-        a.href = vid.src;
-        a.textContent = 'Download the video';
-        document.body.appendChild(a);
-    }
-
-    startMediaRecord(chunks) {
-        // every time the recorder has new data, we will store it in our array
-        const stream = this.previewCanvasEl.current.captureStream(); // grab our canvas MediaStream
-        const rec = new MediaRecorder(stream); // init the recorder
-        rec.ondataavailable = e => chunks.push(e.data);
-        // only when the recorder stops, we construct a complete Blob from all the chunks
-        // rec.onstop = e => this.exportVideo(new Blob(chunks, { type: 'video/webm;codecs=vp9' }));
-        // start recording
-        rec.start();
-
-        return rec;
-    }
-
-    detectSceneChange(currFrame, prevFrame) {
-        let currVec = new cv.MatVector();
-        currVec.push_back(currFrame);
-        let prevVec = new cv.MatVector();
-        prevVec.push_back(prevFrame);
-
-        let currHist = new cv.Mat();
-        let prevHist = new cv.Mat();
-
-        cv.calcHist(currVec, [0], new cv.Mat(), currHist, [256], [0, 255], false);
-        cv.calcHist(prevVec, [0], new cv.Mat(), prevHist, [256], [0, 255], false);
-
-        let cmp = cv.compareHist(currHist, prevHist, cv.HISTCMP_BHATTACHARYYA);
-        console.log(cmp)
     }
 
     initVideoProcessing() {
@@ -154,10 +105,6 @@ class Player extends Component {
         let begin, sum, point, avgX;
         const FPS = 24;
         const kf = new KalmanFilter({ R: 0.01, Q: 4 });
-
-        // here we will store our recorded media chunks (Blobs)
-        const chunks = [];
-        const record = this.startMediaRecord(chunks);
 
         const processVideo = () => {
             try {
@@ -185,7 +132,7 @@ class Player extends Component {
                 avgX = sum / corners.rows;
 
                 this.setState({
-                    previewFrameGeometry: {
+                    previewFrame: {
                         sx: avgX ? kf.filter(avgX) : 0,
                         sy: 0,
                         sWidth: this.videoEl.current.height * (9 / 16),
@@ -222,20 +169,45 @@ class Player extends Component {
         ctx.imageSmoothingEnabled = true;
         let imageData;
 
-        const drawFrames = (videoDOM) => {
-            if (!videoDOM.paused && !videoDOM.ended) {
-                ctx.drawImage(videoDOM, 0, 0, ctx.canvas.width, ctx.canvas.height);
+        // draw frames on hidden canvas for collecting salient feature points
+        const drawFrames = (video) => {
+            if (!video.paused && !video.ended) {
+                ctx.drawImage(video, 0, 0, ctx.canvas.width, ctx.canvas.height);
+                updateFrameBuffer(video);
                 drawPreviewFrames();
-                window.requestAnimationFrame(() => drawFrames(videoDOM));
+                window.requestAnimationFrame(() => drawFrames(video));
             }
         }
 
+        // preview canvas of actual cropped video
         const drawPreviewFrames = () => {
-            imageData = ctx.getImageData(this.state.previewFrameGeometry.sx,
-                this.state.previewFrameGeometry.sy, this.state.previewFrameGeometry.sWidth,
-                this.state.previewFrameGeometry.sHeight);
+            imageData = ctx.getImageData(this.state.previewFrame.sx,
+                this.state.previewFrame.sy, this.state.previewFrame.sWidth,
+                this.state.previewFrame.sHeight);
 
             previewCtx.putImageData(imageData, 0, 0);
+        }
+
+        // update frame buffer
+        const updateFrameBuffer = (video) => {
+            let newFrame = Object.create(this.frame);
+
+            newFrame.num = this.state.frameBuffer.length;
+            newFrame.src = video;
+            newFrame.x = 0;
+            newFrame.y = 0;
+            newFrame.sx = this.state.previewFrame.sx;
+            newFrame.sy = this.state.previewFrame.sy;
+            newFrame.oh = video.height;
+            newFrame.ow = video.width;
+            newFrame.h = 95;
+            newFrame.w = 120;
+            newFrame.t = video.currentTime;
+            newFrame.ar = 9 / 16;
+
+            this.setState(prevState => ({
+                frameBuffer: [...prevState.frameBuffer, newFrame]
+            }));
         }
 
         // event triggered on playing video
@@ -246,24 +218,14 @@ class Player extends Component {
 
         // event triggered while playing video
         this.videoEl.current.addEventListener('timeupdate', (e) => {
-            this.setState({
-                video: {
-                    percentPlayed: ((this.videoEl.current.currentTime / this.videoEl.current.duration) * 100).toFixed(2),
-                    duration: this.videoEl.current.duration.toFixed(2),
-                    currentAt: this.videoEl.current.currentTime.toFixed(2)
-                }
-            });
+            
         });
 
         // event is fired when video is ready to play.
         this.videoEl.current.addEventListener('canplay', (e) => {
-            // draw initial frame on canvas            
-            // this.play();
-            // setTimeout(() => {
-            //     this.pause();
-            // }, 200);
+            // reset video frames on choosing another video
             this.setState({
-                showTimeline: true
+                frameBuffer: []
             });
         });
     }
@@ -282,10 +244,10 @@ class Player extends Component {
                             <video width="640" height="480" controls src={this.props.videoSrc} ref={this.videoEl} >
                                 Sorry, your browser doesn't support embedded videos.
                             </video>
-                            {this.state.showTimeline ? <Timeline video={this.videoEl.current}></Timeline> : null}
+                            <Timeline frames={this.state.frameBuffer}></Timeline>
                         </div>
                         <div className="canvas-container">
-                            <canvas ref={this.canvasEl} width={this.state.canvas.width} height={this.state.canvas.height} style={{ display: 'none' }}></canvas>
+                            <canvas ref={this.canvasEl} width="640" height="480" style={{ display: 'none' }}></canvas>
                             {/* <Rnd ref={c => { this.rnd = c; }} {...this.state.resizerOpts}></Rnd>
                             <div>{this.state.video.currentAt} / {this.state.video.duration}</div>
                             <Slider step={0.01} className="canvas-timeline"
@@ -298,7 +260,7 @@ class Player extends Component {
                     </Col>
                     <Col span={9}>
                         <div className="preview-container">
-                            <canvas ref={this.previewCanvasEl} width={this.state.previewFrameGeometry.sWidth} height={this.state.previewFrameGeometry.sHeight}></canvas>
+                            <canvas ref={this.previewCanvasEl} width={this.state.previewFrame.sWidth} height={this.state.previewFrame.sHeight}></canvas>
                         </div>
                         {/* <canvas id="canvasOutput"></canvas> */}
                     </Col>
