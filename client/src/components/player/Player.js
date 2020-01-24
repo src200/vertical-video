@@ -1,8 +1,9 @@
 import React, { Component } from 'react';
 import './Player.scss';
-import '../resizer/Resizer.scss'
+// import '../resizer/Resizer.scss'
+import Timeline from '../timeline/Timeline';
 // import Resizer from '../resizer/Resizer';
-import { Slider, Button } from 'antd';
+import { Row, Col, Slider, Button } from 'antd';
 import { Rnd } from 'react-rnd';
 
 const cv = window.cv;
@@ -66,7 +67,8 @@ class Player extends Component {
                         }
                     });
                 }
-            }
+            },
+            showTimeline: false
         };
 
         this.reqAnimeId = '';
@@ -150,8 +152,8 @@ class Player extends Component {
         let goodFeatures = [];
 
         let begin, sum, point, avgX;
-        const FPS = 24;        
-        const kf = new KalmanFilter({R: 0.01, Q: 4});
+        const FPS = 24;
+        const kf = new KalmanFilter({ R: 0.01, Q: 4 });
 
         // here we will store our recorded media chunks (Blobs)
         const chunks = [];
@@ -260,6 +262,9 @@ class Player extends Component {
             // setTimeout(() => {
             //     this.pause();
             // }, 200);
+            this.setState({
+                showTimeline: true
+            });
         });
     }
 
@@ -271,24 +276,33 @@ class Player extends Component {
     render() {
         return (
             <div className="player">
-                <video width="640" height="480" controls src={this.props.videoSrc} ref={this.videoEl} >
-                    Sorry, your browser doesn't support embedded videos.
-                </video>
-                <div className="canvas-container">
-                    <canvas ref={this.canvasEl} width={this.state.canvas.width} height={this.state.canvas.height} style={{ display: 'none' }}></canvas>
-                    {/* <Rnd ref={c => { this.rnd = c; }} {...this.state.resizerOpts}></Rnd>
-                    <div>{this.state.video.currentAt} / {this.state.video.duration}</div>
-                    <Slider step={0.01} className="canvas-timeline"
-                        max={parseFloat(this.state.video.duration)}
-                        value={parseFloat(this.state.video.currentAt)}
-                        onChange={this.seek.bind(this)} />
-                    <Button type="primary" onClick={this.play}>Play</Button>
-                    <Button type="primary" onClick={this.pause}>Pause</Button> */}
-                </div>
-                <div className="preview-container">
-                    <canvas ref={this.previewCanvasEl} width={this.state.previewFrameGeometry.sWidth} height={this.state.previewFrameGeometry.sHeight}></canvas>
-                </div>
-                <canvas id="canvasOutput"></canvas>
+                <Row>
+                    <Col span={15}>
+                        <div className="video-container">
+                            <video width="640" height="480" controls src={this.props.videoSrc} ref={this.videoEl} >
+                                Sorry, your browser doesn't support embedded videos.
+                            </video>
+                            {this.state.showTimeline ? <Timeline video={this.videoEl.current}></Timeline> : null}
+                        </div>
+                        <div className="canvas-container">
+                            <canvas ref={this.canvasEl} width={this.state.canvas.width} height={this.state.canvas.height} style={{ display: 'none' }}></canvas>
+                            {/* <Rnd ref={c => { this.rnd = c; }} {...this.state.resizerOpts}></Rnd>
+                            <div>{this.state.video.currentAt} / {this.state.video.duration}</div>
+                            <Slider step={0.01} className="canvas-timeline"
+                                max={parseFloat(this.state.video.duration)}
+                                value={parseFloat(this.state.video.currentAt)}
+                                onChange={this.seek.bind(this)} />
+                            <Button type="primary" onClick={this.play}>Play</Button>
+                            <Button type="primary" onClick={this.pause}>Pause</Button> */}
+                        </div>
+                    </Col>
+                    <Col span={9}>
+                        <div className="preview-container">
+                            <canvas ref={this.previewCanvasEl} width={this.state.previewFrameGeometry.sWidth} height={this.state.previewFrameGeometry.sHeight}></canvas>
+                        </div>
+                        {/* <canvas id="canvasOutput"></canvas> */}
+                    </Col>
+                </Row>
             </div>
         )
     }

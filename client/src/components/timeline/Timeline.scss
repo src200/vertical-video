@@ -1,0 +1,18 @@
+.timeline {
+    height: 200px;
+    border: 1px solid gray;
+    .frames {
+        height: 100px;
+        margin-bottom: 2px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        white-space: nowrap;
+
+        img {
+            display: inline-block;
+        } 
+    }
+    .time {
+        height: 100px;
+    }
+}

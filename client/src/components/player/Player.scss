@@ -1,15 +1,16 @@
 .player {
-  display: flex;
-  .canvas-container {
-    position: relative;
-    box-sizing: border-box;
-    .canvas-timeline {
-      width: 630px;
+  .video-container {
+    video {
+      border: 1px solid gray;
     }
   }
+  .canvas-container {
+    
+  }
   .preview-container {
-    margin-left: 10px;
-    margin-right: 10px;
+    canvas {
+      border: 1px solid gray;
+    }
   }
   
 }
