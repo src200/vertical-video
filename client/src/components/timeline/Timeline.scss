@@ -1,6 +1,6 @@
 .timeline {
     height: 200px;
-    width: 640px;
+    // width: 640px;
     border: 1px solid gray;
     .frames {
         height: 100px;
@@ -8,10 +8,9 @@
         overflow-x: auto;
         overflow-y: hidden;
         white-space: nowrap;
-
-        img {
-            display: inline-block;
-        } 
+        canvas {
+            border: 2px solid steelblue
+        }
     }
     .time {
         height: 100px;

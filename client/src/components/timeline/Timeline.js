@@ -5,24 +5,40 @@ import Canvas from '../canvas/Canvas';
 class Timeline extends Component {
     constructor(props) {
         super(props);
+      
+        this.onVideoPlaying = this.onVideoPlaying.bind(this);
+        this.onVideoChanged = this.onVideoChanged.bind(this);
+        this.onSceneDetected = this.onSceneDetected.bind(this);
     }
 
-    componentDidMount() {
+    onVideoPlaying(video) {
+        if (video.currentTime !== 0) {
+           
+        }
+    }
+
+    onVideoChanged(video) {
+       
+    }
+
+    onSceneDetected() {
         
     }
 
-    render() {
-        const canvases = this.props.frames.map((frame) =>
-            <Canvas key={frame.num} frame={frame}></Canvas>
-        );
+    componentDidMount() {
 
+    }
+
+    render() {
         return (
             <div className="timeline">
                 <div className="frames">
-                    {canvases}
-                </div>
+                    {this.props.frames.map((frame) =>
+                        <Canvas key={frame.num} frame={frame}></Canvas>
+                    )}
+                </div>                
                 <div className="time">
-
+                    
                 </div>
             </div>
         );

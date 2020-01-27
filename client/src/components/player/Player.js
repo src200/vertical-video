@@ -7,8 +7,8 @@ import Canvas from '../canvas/Canvas';
 import { Row, Col, Slider, Button } from 'antd';
 import { Rnd } from 'react-rnd';
 
-
 const cv = window.cv;
+const Scd = window.Scd;
 const KalmanFilter = window.KalmanFilter;
 
 class Player extends Component {
@@ -61,7 +61,7 @@ class Player extends Component {
                     });
                 }
             },
-            frameBuffer: []
+            keyFrameBuffer: []
         };
 
         // frame constructor
@@ -163,17 +163,50 @@ class Player extends Component {
         window.setTimeout(processVideo, 0);
     }
 
+    // init scenedetection(pixel based)
+    initSceneDetection() {
+        const scd = Scd(this.videoEl.current,{
+            mode: 'PlaybackMode',
+            minSceneDuration: 1,
+            threshold: 10
+        });
+
+        return scd;
+    }
+
+    // update key frame buffer
+    updateKeyFrameBuffer(video) {
+        let newFrame = Object.create(this.frame);
+
+        newFrame.num = this.state.keyFrameBuffer.length;
+        newFrame.src = video;
+        newFrame.x = 0;
+        newFrame.y = 0;
+        newFrame.sx = this.state.previewFrame.sx;
+        newFrame.sy = this.state.previewFrame.sy;
+        newFrame.oh = video.height;
+        newFrame.ow = video.width;
+        newFrame.h = 95;
+        newFrame.w = 120;
+        newFrame.t = video.currentTime;
+        newFrame.ar = 9 / 16;
+
+        this.setState(prevState => ({
+            keyFrameBuffer: [...prevState.keyFrameBuffer, newFrame]
+        }));
+    }
+
     componentDidMount() {
         const ctx = this.canvasEl.current.getContext('2d');
         const previewCtx = this.previewCanvasEl.current.getContext('2d');
         ctx.imageSmoothingEnabled = true;
         let imageData;
+        let scd = {};
 
         // draw frames on hidden canvas for collecting salient feature points
         const drawFrames = (video) => {
             if (!video.paused && !video.ended) {
                 ctx.drawImage(video, 0, 0, ctx.canvas.width, ctx.canvas.height);
-                updateFrameBuffer(video);
                 drawPreviewFrames();
                 window.requestAnimationFrame(() => drawFrames(video));
             }
@@ -188,45 +221,44 @@ class Player extends Component {
             previewCtx.putImageData(imageData, 0, 0);
         }
 
-        // update frame buffer
-        const updateFrameBuffer = (video) => {
-            let newFrame = Object.create(this.frame);
-
-            newFrame.num = this.state.frameBuffer.length;
-            newFrame.src = video;
-            newFrame.x = 0;
-            newFrame.y = 0;
-            newFrame.sx = this.state.previewFrame.sx;
-            newFrame.sy = this.state.previewFrame.sy;
-            newFrame.oh = video.height;
-            newFrame.ow = video.width;
-            newFrame.h = 95;
-            newFrame.w = 120;
-            newFrame.t = video.currentTime;
-            newFrame.ar = 9 / 16;
-
-            this.setState(prevState => ({
-                frameBuffer: [...prevState.frameBuffer, newFrame]
-            }));
-        }
-
         // event triggered on playing video
         this.videoEl.current.addEventListener('play', (e) => {
+            // draw frames on temp canvas to find salient features
             drawFrames(this.videoEl.current);
+
+            // init video processing using opencv
             this.initVideoProcessing();
+
+            // start scene detection
+            scd.start();
         });
 
         // event triggered while playing video
         this.videoEl.current.addEventListener('timeupdate', (e) => {
-            
+            this.refs.videoTimeline.onVideoPlaying(e.target);
+        });
+
+        // event triggered when new video is selected
+        this.videoEl.current.addEventListener('durationchange', (e) => {
+            // reset video frames on choosing another video
+            this.setState({
+                keyFrameBuffer: []
+            });
+
+            this.refs.videoTimeline.onVideoChanged(e.target);
+
+            // start scene detection
+            scd = this.initSceneDetection();
         });
 
         // event is fired when video is ready to play.
         this.videoEl.current.addEventListener('canplay', (e) => {
-            // reset video frames on choosing another video
-            this.setState({
-                frameBuffer: []
-            });
+          
+        });
+
+        // event is fired when scene is detected.
+        this.videoEl.current.addEventListener('scenechange', (e) => {
+            this.updateKeyFrameBuffer(e.target);
         });
     }
 
@@ -244,7 +276,6 @@ class Player extends Component {
                             <video width="640" height="480" controls src={this.props.videoSrc} ref={this.videoEl} >
                                 Sorry, your browser doesn't support embedded videos.
                             </video>
-                            <Timeline frames={this.state.frameBuffer}></Timeline>
                         </div>
                         <div className="canvas-container">
                             <canvas ref={this.canvasEl} width="640" height="480" style={{ display: 'none' }}></canvas>
@@ -258,11 +289,16 @@ class Player extends Component {
                             <Button type="primary" onClick={this.pause}>Pause</Button> */}
                         </div>
                     </Col>
-                    <Col span={9}>
+                    <Col span={9} align="right">
                         <div className="preview-container">
                             <canvas ref={this.previewCanvasEl} width={this.state.previewFrame.sWidth} height={this.state.previewFrame.sHeight}></canvas>
                         </div>
                         {/* <canvas id="canvasOutput"></canvas> */}
+                    </Col>
+                </Row>
+                <Row>
+                    <Col span={24}>
+                        <Timeline frames={this.state.keyFrameBuffer} ref="videoTimeline"></Timeline>
                     </Col>
                 </Row>
             </div>
