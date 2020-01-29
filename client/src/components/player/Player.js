@@ -1,11 +1,8 @@
 import React, { Component } from 'react';
+import { Row, Col } from 'antd';
+
 import './Player.scss';
-// import '../resizer/Resizer.scss'
 import Timeline from '../timeline/Timeline';
-import Canvas from '../canvas/Canvas';
-// import Resizer from '../resizer/Resizer';
-import { Row, Col, Slider, Button } from 'antd';
-import { Rnd } from 'react-rnd';
 
 const cv = window.cv;
 const Scd = window.Scd;
@@ -24,42 +21,6 @@ class Player extends Component {
                 sy: 0,
                 sWidth: 270,
                 sHeight: 480
-            },
-            resizerOpts: {
-                className: 'resizer',
-                minWidth: 100,
-                minHeight: 100,
-                bounds: 'parent',
-                resizeHandleClasses: {
-                    bottom: 'bottom',
-                    bottomLeft: 'bottom-left',
-                    bottomRight: 'bottom-right',
-                    left: 'left',
-                    right: 'right',
-                    top: 'top',
-                    topLeft: 'top-left',
-                    topRight: 'top-right'
-                },
-                onDrag: (e, d) => {
-                    this.setState({
-                        previewFrame: {
-                            sx: d.x,
-                            sy: d.y,
-                            sWidth: e.target.offsetWidth,
-                            sHeight: e.target.offsetHeight
-                        }
-                    });
-                },
-                onResize: (e, direction, ref, delta, position) => {
-                    this.setState({
-                        previewFrame: {
-                            sx: position.x,
-                            sy: position.y,
-                            sWidth: ref.offsetWidth,
-                            sHeight: ref.offsetHeight
-                        }
-                    });
-                }
             },
             keyFrameBuffer: []
         };
@@ -186,7 +147,7 @@ class Player extends Component {
         newFrame.sy = this.state.previewFrame.sy;
         newFrame.oh = video.height;
         newFrame.ow = video.width;
-        newFrame.h = 95;
+        newFrame.h = 100;
         newFrame.w = 120;
         newFrame.t = video.currentTime;
         newFrame.ar = 9 / 16;
@@ -279,14 +240,6 @@ class Player extends Component {
                         </div>
                         <div className="canvas-container">
                             <canvas ref={this.canvasEl} width="640" height="480" style={{ display: 'none' }}></canvas>
-                            {/* <Rnd ref={c => { this.rnd = c; }} {...this.state.resizerOpts}></Rnd>
-                            <div>{this.state.video.currentAt} / {this.state.video.duration}</div>
-                            <Slider step={0.01} className="canvas-timeline"
-                                max={parseFloat(this.state.video.duration)}
-                                value={parseFloat(this.state.video.currentAt)}
-                                onChange={this.seek.bind(this)} />
-                            <Button type="primary" onClick={this.play}>Play</Button>
-                            <Button type="primary" onClick={this.pause}>Pause</Button> */}
                         </div>
                     </Col>
                     <Col span={9} align="right">

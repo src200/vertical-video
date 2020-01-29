@@ -37,9 +37,9 @@ class Timeline extends Component {
                         <Canvas key={frame.num} frame={frame}></Canvas>
                     )}
                 </div>                
-                <div className="time">
+                {/* <div className="time">
                     
-                </div>
+                </div> */}
             </div>
         );
     }

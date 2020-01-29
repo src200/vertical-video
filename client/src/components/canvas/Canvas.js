@@ -1,10 +1,30 @@
-import React, { Component, Fragment } from 'react';
+import React, { Component } from 'react';
+import { Rnd } from 'react-rnd';
 import './Canvas.scss';
 
 class Canvas extends Component {
     constructor(props) {
         super(props);
-        
+
+        this.state = {
+            resizerOpts: {
+                className: 'resizer',
+                minWidth: 100,
+                minHeight: 100,
+                bounds: 'parent',
+                onDrag: (e, d) => {
+                    this.setState({
+                        previewFrame: {
+                            sx: d.x,
+                            sy: d.y,
+                            sWidth: e.target.offsetWidth,
+                            sHeight: e.target.offsetHeight
+                        }
+                    });
+                }
+            }
+        }
+
         /** 
          *  frame prop
         this.frame = {
@@ -22,13 +42,14 @@ class Canvas extends Component {
             ar: 9/16 // aspect ratio of frame( this could change in future for 1:1)
         }
         */
-        
+
         this.canvasEl = React.createRef();
     }
 
     componentDidMount() {
         let canvas = this.canvasEl.current;
         let frame = this.props.frame;
+
         const ctx = canvas.getContext('2d');
         ctx.imageSmoothingEnabled = true;
         canvas.width = frame.w;
@@ -44,9 +65,12 @@ class Canvas extends Component {
 
     render() {
         return (
-            <Fragment>
-               <canvas ref={this.canvasEl}></canvas>
-            </Fragment>
+            <div className="canvas">
+                <canvas ref={this.canvasEl}></canvas>
+                <Rnd position={{ x: this.props.frame.sx, y: this.props.frame.sy }}
+                    size={{ width: this.props.frame.w,  height: this.props.frame.h }}
+                    {...this.state.resizerOpts}></Rnd>
+            </div>
         );
     }
 }
