@@ -38,7 +38,7 @@ class Player extends Component {
             h: 0, //  height of frame
             w: 0, //  width of frame
             t: 0, // time of frame in the video
-            ar: 9/16 // aspect ratio of frame( this could change in future for 1:1)
+            ar: 9 / 16 // aspect ratio of frame( this could change in future for 1:1)
         }
 
         this.reqAnimeId = '';
@@ -126,7 +126,7 @@ class Player extends Component {
 
     // init scenedetection(pixel based)
     initSceneDetection() {
-        const scd = Scd(this.videoEl.current,{
+        const scd = Scd(this.videoEl.current, {
             mode: 'PlaybackMode',
             minSceneDuration: 1,
             threshold: 10
@@ -137,8 +137,7 @@ class Player extends Component {
 
     // update key frame buffer
     updateKeyFrameBuffer(video) {
-        let newFrame = Object.create(this.frame);
-
+        let newFrame = { ...this.frame };
         newFrame.num = this.state.keyFrameBuffer.length;
         newFrame.src = video;
         newFrame.x = 0;
@@ -214,7 +213,7 @@ class Player extends Component {
 
         // event is fired when video is ready to play.
         this.videoEl.current.addEventListener('canplay', (e) => {
-          
+
         });
 
         // event is fired when scene is detected.

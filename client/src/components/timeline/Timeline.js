@@ -36,10 +36,7 @@ class Timeline extends Component {
                     {this.props.frames.map((frame) =>
                         <Canvas key={frame.num} frame={frame}></Canvas>
                     )}
-                </div>                
-                {/* <div className="time">
-                    
-                </div> */}
+                </div>
             </div>
         );
     }
