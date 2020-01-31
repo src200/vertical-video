@@ -42,10 +42,12 @@ class Canvas extends Component {
         canvas.rect.startX = (frame.sx * frame.w) / 640;
         canvas.rect.startY = frame.sy;
         canvas.rect.w = frame.h * (9 / 16);
-        canvas.rect.h = frame.h
+        canvas.rect.h = frame.h;
+        canvas.mouseDownPosition = -1;
 
         canvas.addEventListener('mousedown', (e) => {
             canvas.drag = true;
+            canvas.mouseDownPosition = e.clientX;
         });
 
         canvas.addEventListener('mouseup', (e) => {
@@ -54,8 +56,8 @@ class Canvas extends Component {
 
         canvas.addEventListener('mousemove', (e) => {
             if (canvas.drag) {
-                canvas.rect.startX = (e.pageX - this.offsetLeft) - canvas.rect.w;
-                canvas.rect.startY = (e.pageY - this.offsetTop) - canvas.rect.h;
+                canvas.rect.startX = e.clientX - canvas.mouseDownPosition;
+                canvas.rect.startY = 0;
                 canvas.ctx.clearRect(0, 0, canvas.width, canvas.height);
                 draw();
             }
@@ -70,7 +72,7 @@ class Canvas extends Component {
             
             canvas.ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
             canvas.ctx.fillRect(canvas.rect.startX, canvas.rect.startY, canvas.rect.w, canvas.rect.h);
-        }
+        };
         
         draw();
     }
