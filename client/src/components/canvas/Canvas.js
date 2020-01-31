@@ -8,25 +8,7 @@ class Canvas extends Component {
 
         this.state = {
             frame: props.frame
-        }
-
-        /** 
-         *  frame prop
-        this.frame = {
-            num: 0, // frame number,
-            src: '', // src of frame( from video)
-            sx: 0, // x value of src image
-            sy: 0, // y value of src image
-            dx: 0, // x value of destination canvas
-            dy: 0, // y value of destination canvas
-            oh: 0, // original height of video
-            ow: 0, // original width of video
-            h: 0, //  height of frame
-            w: 0, //  width of frame
-            t: 0, // time of frame in the video
-            ar: 9/16 // aspect ratio of frame( this could change in future for 1:1)
-        }
-        */
+        };
     }
 
     componentDidMount() {
@@ -64,13 +46,15 @@ class Canvas extends Component {
         });
 
         const draw = () => {
+            // canvas.ctx.globalAlpha = 0.2;
+            // canvas.ctx.globalCompositeOperation = 'source-in';
             canvas.ctx.putImageData(
                 frame.src,
                 frame.x,
                 frame.y,
             );
             
-            canvas.ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+            canvas.ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
             canvas.ctx.fillRect(canvas.rect.startX, canvas.rect.startY, canvas.rect.w, canvas.rect.h);
         };
         

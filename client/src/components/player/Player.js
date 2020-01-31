@@ -22,7 +22,7 @@ class Player extends Component {
                 sWidth: 270,
                 sHeight: 480
             },
-            keyFrameBuffer: []
+            frameBuffer: []
         };
 
         // frame constructor
@@ -38,7 +38,9 @@ class Player extends Component {
             h: 0, //  height of frame
             w: 0, //  width of frame
             t: 0, // time of frame in the video
-            ar: 9 / 16 // aspect ratio of frame( this could change in future for 1:1)
+            ar: 9 / 16, // aspect ratio of frame( this could change in future for 1:1)
+            isKeyFrame: false, // make true when scene detects
+            srcVideoObject: '' // original src
         }
 
         this.reqAnimeId = '';
@@ -136,10 +138,20 @@ class Player extends Component {
     }
 
     // update key frame buffer
-    updateKeyFrameBuffer(src, video) {
+    updateFrameBuffer(video, isKeyFrame) {
+        // create tmp canvas to copy pixels of src video object
+        // this is to create new memory for every frame
+        const tmpCanvas = document.createElement('canvas');
+        tmpCanvas.width = video.width;
+        tmpCanvas.height = video.height;
+        const ctx = tmpCanvas.getContext('2d');
+        ctx.scale(0.187, 0.208); // scale canvas to thumbnail dimensions
+        ctx.drawImage(video, 0, 0, video.width, video.height);
+
         let newFrame = { ...this.frame };
-        newFrame.num = this.state.keyFrameBuffer.length;
-        newFrame.src = src;
+        newFrame.num = this.state.frameBuffer.length;
+        newFrame.srcVideoObject = video;
+        newFrame.src = ctx.getImageData(0, 0, video.width, video.height);
         newFrame.x = 0;
         newFrame.y = 0;
         newFrame.sx = this.state.previewFrame.sx;
@@ -150,9 +162,10 @@ class Player extends Component {
         newFrame.w = 120;
         newFrame.t = video.currentTime;
         newFrame.ar = 9 / 16;
+        newFrame.isKeyFrame = isKeyFrame ? isKeyFrame : false;
 
         this.setState(prevState => ({
-            keyFrameBuffer: [...prevState.keyFrameBuffer, newFrame]
+            frameBuffer: [...prevState.frameBuffer, newFrame]
         }));
     }
 
@@ -168,6 +181,7 @@ class Player extends Component {
             if (!video.paused && !video.ended) {
                 ctx.drawImage(video, 0, 0, ctx.canvas.width, ctx.canvas.height);
                 drawPreviewFrames();
+                this.updateFrameBuffer(video);
                 window.requestAnimationFrame(() => drawFrames(video));
             }
         }
@@ -202,7 +216,7 @@ class Player extends Component {
         this.videoEl.current.addEventListener('durationchange', (e) => {
             // reset video frames on choosing another video
             this.setState({
-                keyFrameBuffer: []
+                frameBuffer: []
             });
 
             this.refs.videoTimeline.onVideoChanged(e.target);
@@ -218,15 +232,7 @@ class Player extends Component {
 
         // event is fired when scene is detected.
         this.videoEl.current.addEventListener('scenechange', (e) => {
-            const canvas = document.createElement('canvas');     
-            const video = e.target;
-            canvas.width = video.width;
-            canvas.height = video.height;
-            const ctx = canvas.getContext('2d');
-            ctx.scale(0.187, 0.208); // scale canvas to thumbnail dimensions
-            ctx.drawImage(video, 0, 0, video.width, video.height);
-            const pixData = ctx.getImageData(0, 0, video.width, video.height);
-            this.updateKeyFrameBuffer(pixData, video);
+            this.updateFrameBuffer(e.target, true);
         });
     }
 
@@ -258,7 +264,7 @@ class Player extends Component {
                 </Row>
                 <Row>
                     <Col span={24}>
-                        <Timeline frames={this.state.keyFrameBuffer} ref="videoTimeline"></Timeline>
+                        <Timeline frames={this.state.frameBuffer} ref="videoTimeline"></Timeline>
                     </Col>
                 </Row>
             </div>
