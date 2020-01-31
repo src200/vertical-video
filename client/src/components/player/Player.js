@@ -13,9 +13,6 @@ class Player extends Component {
         super(props);
 
         this.state = {
-            hiddenFrame: {
-
-            },
             previewFrame: {
                 sx: 0,
                 sy: 0,
@@ -27,18 +24,18 @@ class Player extends Component {
 
         // frame constructor
         this.frame = {
-            num: 0, // frame number,
-            src: '', // src of frame( from video)
-            sx: 0, // x value of src image
-            sy: 0, // y value of src image
-            dx: 0, // x value of destination canvas
-            dy: 0, // y value of destination canvas
-            oh: 0, // original height of video
-            ow: 0, // original width of video
-            h: 0, //  height of frame
-            w: 0, //  width of frame
-            t: 0, // time of frame in the video
-            ar: 9 / 16, // aspect ratio of frame( this could change in future for 1:1)
+            num: 0,            // frame number,
+            src: '',           // src of frame( from video)
+            sx: 0,             // x value of src image
+            sy: 0,             // y value of src image
+            dx: 0,             // x value of destination canvas
+            dy: 0,             // y value of destination canvas
+            oh: 0,             // original height of video
+            ow: 0,             // original width of video
+            h: 0,              //  height of frame
+            w: 0,              //  width of frame
+            t: 0,              // time of frame in the video
+            ar: 9 / 16,        // aspect ratio of frame( this could change in future for 1:1)
             isKeyFrame: false, // make true when scene detects
             srcVideoObject: '' // original src
         }
@@ -103,17 +100,6 @@ class Player extends Component {
                     }
                 });
 
-                // for (let i = 0; i < goodFeatures.length; i++) {
-                //     cv.circle(srcFrame, goodFeatures[i], 3, new cv.Scalar(10, 200, 10), -1);
-                // }
-
-                // cv.imshow('canvasOutput', srcFrame);
-                // this.detectSceneChange(srcFrame, prevFrame);
-
-                // console.log('x', avgX);
-                // console.log('kalman x:', kf.filter(avgX));
-                // console.log('t:', begin);
-
                 // schedule the next one.
                 let delay = 1000 / FPS - (Date.now() - begin);
                 window.setTimeout(processVideo, delay);
@@ -137,7 +123,7 @@ class Player extends Component {
         return scd;
     }
 
-    // update key frame buffer
+    // update frame buffer
     updateFrameBuffer(video, isKeyFrame) {
         // create tmp canvas to copy pixels of src video object
         // this is to create new memory for every frame
@@ -172,7 +158,6 @@ class Player extends Component {
     componentDidMount() {
         const ctx = this.canvasEl.current.getContext('2d');
         const previewCtx = this.previewCanvasEl.current.getContext('2d');
-        ctx.imageSmoothingEnabled = true;
         let imageData;
         let scd = {};
 

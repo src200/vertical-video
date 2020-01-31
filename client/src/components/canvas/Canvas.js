@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, Fragment } from 'react';
 // import { Rnd } from 'react-rnd';
 import './Canvas.scss';
 
@@ -56,6 +56,7 @@ class Canvas extends Component {
             
             canvas.ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
             canvas.ctx.fillRect(canvas.rect.startX, canvas.rect.startY, canvas.rect.w, canvas.rect.h);
+            canvas.scrollIntoView();
         };
         
         draw();
@@ -63,9 +64,9 @@ class Canvas extends Component {
 
     render() {
         return (
-            <div className="canvas">
+            <Fragment>
                 <canvas ref={canvas => {this[`canvas_${this.props.frame.num}`] = canvas}}></canvas>
-            </div>
+            </Fragment>
         );
     }
 }
