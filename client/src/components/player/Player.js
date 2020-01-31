@@ -136,16 +136,16 @@ class Player extends Component {
     }
 
     // update key frame buffer
-    updateKeyFrameBuffer(video) {
+    updateKeyFrameBuffer(src, video) {
         let newFrame = { ...this.frame };
         newFrame.num = this.state.keyFrameBuffer.length;
-        newFrame.src = video;
+        newFrame.src = src;
         newFrame.x = 0;
         newFrame.y = 0;
         newFrame.sx = this.state.previewFrame.sx;
         newFrame.sy = this.state.previewFrame.sy;
-        newFrame.oh = video.height;
-        newFrame.ow = video.width;
+        newFrame.oh = video.videoHeight;
+        newFrame.ow = video.videoWidth;
         newFrame.h = 100;
         newFrame.w = 120;
         newFrame.t = video.currentTime;
@@ -218,7 +218,15 @@ class Player extends Component {
 
         // event is fired when scene is detected.
         this.videoEl.current.addEventListener('scenechange', (e) => {
-            this.updateKeyFrameBuffer(e.target);
+            const canvas = document.createElement('canvas');     
+            const video = e.target;
+            canvas.width = video.width;
+            canvas.height = video.height;
+            const ctx = canvas.getContext('2d');
+            ctx.scale(0.187, 0.208); // scale canvas to thumbnail dimensions
+            ctx.drawImage(video, 0, 0, video.width, video.height);
+            const pixData = ctx.getImageData(0, 0, video.width, video.height);
+            this.updateKeyFrameBuffer(pixData, video);
         });
     }
 

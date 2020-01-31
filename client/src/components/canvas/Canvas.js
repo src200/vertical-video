@@ -7,20 +7,7 @@ class Canvas extends Component {
         super(props);
 
         this.state = {
-            frame: props.frame,
-            resizerOpts: {
-                className: 'resizer',
-                onDrag: (e, d) => {
-                    this.setState({
-                        previewFrame: {
-                            sx: d.x,
-                            sy: d.y,
-                            sWidth: e.target.offsetWidth,
-                            sHeight: e.target.offsetHeight
-                        }
-                    });
-                }
-            }
+            frame: props.frame
         }
 
         /** 
@@ -75,12 +62,10 @@ class Canvas extends Component {
         });
 
         const draw = () => {
-            canvas.ctx.drawImage(
+            canvas.ctx.putImageData(
                 frame.src,
                 frame.x,
                 frame.y,
-                frame.w,
-                frame.h
             );
             
             canvas.ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
@@ -94,9 +79,6 @@ class Canvas extends Component {
         return (
             <div className="canvas">
                 <canvas ref={canvas => {this[`canvas_${this.props.frame.num}`] = canvas}}></canvas>
-                {/* <Rnd position={{ x: (this.props.frame.sx * this.props.frame.w) / 640, y: this.props.frame.sy }}
-                    size={{ width: (this.props.frame.h) * (9 / 16), height: this.props.frame.h }}
-                    {...this.state.resizerOpts}></Rnd> */}
             </div>
         );
     }
