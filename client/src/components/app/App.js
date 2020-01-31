@@ -2,9 +2,9 @@ import React, { Component } from "react";
 import "./App.scss";
 import Uploader from "../uploader/Uploader";
 import Player from "../player/Player";
-import { Layout, Menu } from 'antd';
+import { Layout } from 'antd';
 
-const { Header, Footer, Content, Sider } = Layout;
+const { Content } = Layout;
 
 class App extends Component {
     constructor(props) {
