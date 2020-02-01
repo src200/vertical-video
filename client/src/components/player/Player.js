@@ -16,7 +16,7 @@ class Player extends Component {
             previewFrame: {
                 sx: 0,
                 sy: 0,
-                sWidth: 270,
+                sWidth: 270, // TODO
                 sHeight: 480
             },
             frameBuffer: []
@@ -155,6 +155,12 @@ class Player extends Component {
         }));
     }
 
+    // update position of salient points rectangle
+    // this values are lifter from canvas -> timleine -> player component
+    updatePosition(rect) {
+        console.log(rect);
+    }
+
     componentDidMount() {
         const ctx = this.canvasEl.current.getContext('2d');
         const previewCtx = this.previewCanvasEl.current.getContext('2d');
@@ -249,7 +255,7 @@ class Player extends Component {
                 </Row>
                 <Row>
                     <Col span={24}>
-                        <Timeline frames={this.state.frameBuffer} ref="videoTimeline"></Timeline>
+                        <Timeline frames={this.state.frameBuffer} ref="videoTimeline" updatePosition={this.updatePosition}></Timeline>
                     </Col>
                 </Row>
             </div>

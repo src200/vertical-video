@@ -3,25 +3,22 @@ import React, { Component, Fragment } from 'react';
 import './Canvas.scss';
 
 class Canvas extends Component {
-    constructor(props) {
-        super(props);
-
-        this.state = {
-            frame: props.frame
-        };
+    updatePosition(rect, frame) {
+        let pos = { x: 0, y: 0 };
+        pos.x = (rect.startX * 640) / frame.w; // TODO
+        this.props.updatePosition(pos);
     }
 
     componentDidMount() {
-        let frame = this.state.frame;
+        let frame = this.props.frame;
 
         const canvas = this[`canvas_${frame.num}`];
-        canvas.frame = frame.num;
         canvas.ctx = canvas.getContext('2d');
         canvas.rect = {};
         canvas.drag = false;
         canvas.width = frame.w;
         canvas.height = frame.h;
-        canvas.rect.startX = (frame.sx * frame.w) / 640;
+        canvas.rect.startX = (frame.sx * frame.w) / 640; // TODO
         canvas.rect.startY = frame.sy;
         canvas.rect.w = frame.h * (9 / 16);
         canvas.rect.h = frame.h;
@@ -29,7 +26,7 @@ class Canvas extends Component {
 
         canvas.addEventListener('mousedown', (e) => {
             canvas.drag = true;
-            canvas.mouseDownPosition = e.clientX;
+            canvas.mouseDownPosition = e.clientX - e.offsetX;
         });
 
         canvas.addEventListener('mouseup', (e) => {
@@ -40,8 +37,13 @@ class Canvas extends Component {
             if (canvas.drag) {
                 canvas.rect.startX = e.clientX - canvas.mouseDownPosition;
                 canvas.rect.startY = 0;
-                canvas.ctx.clearRect(0, 0, canvas.width, canvas.height);
-                draw();
+
+                // drag rect within canvas bounds
+                if (canvas.rect.startX >= 0 && (canvas.rect.startX + canvas.rect.w) <= canvas.width) {
+                    this.updatePosition(canvas.rect, frame);
+                    canvas.ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    draw();
+                }
             }
         });
 
@@ -56,7 +58,7 @@ class Canvas extends Component {
             
             canvas.ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
             canvas.ctx.fillRect(canvas.rect.startX, canvas.rect.startY, canvas.rect.w, canvas.rect.h);
-            canvas.scrollIntoView();
+            // canvas.scrollIntoView();
         };
         
         draw();

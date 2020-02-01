@@ -33,7 +33,9 @@ class Timeline extends Component {
         return (
             <div className="timeline">
                 <div className="frames">
-                    {this.props.frames.map(frame => frame.isKeyFrame ? <Canvas key={frame.num} frame={frame}></Canvas> : null)}
+                    {this.props.frames.map(frame =>
+                        frame.isKeyFrame ? <Canvas key={frame.num} frame={frame} updatePosition={this.props.updatePosition}></Canvas> : null)
+                    }
                 </div>
             </div>
         );
