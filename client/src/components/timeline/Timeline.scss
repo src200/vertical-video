@@ -3,8 +3,8 @@
     border: 1px solid gray;
     box-sizing: content-box;
     .frames {
+        height: 100px;
         box-sizing: border-box;
-        margin-bottom: 2px;
         overflow-x: auto;
         overflow-y: hidden;
         white-space: nowrap;
@@ -13,8 +13,5 @@
             display: inline-block;
             // border: 2px solid steelblue
         }
-    }
-    .time {
-        height: 100px;
     }
 }

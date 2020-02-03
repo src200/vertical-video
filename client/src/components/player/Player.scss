@@ -5,12 +5,58 @@
     }
   }
   .canvas-container {
-    
   }
   .preview-container {
     canvas {
       border: 1px solid gray;
     }
   }
-  
+  .time-metadata {
+    height: 50px;
+    border: 1px solid gray;
+    .ant-row-flex {
+      margin-top: 10px;
+    }
+    .time {
+      .ant-btn {
+        border-color: transparent;
+        background-color: transparent !important;
+        &:focus,
+        &:hover {
+          color: gray;
+        }
+        .ant-btn-disabled {
+          background-color: transparent !important;
+          color: transparent !important;
+        }
+      }
+      [ant-click-animating-without-extra-node]:after {
+        -webkit-animation: none !important;
+        -moz-animation: none !important;
+        -o-animation: none !important;
+        -ms-animation: none !important;
+        animation: none !important;
+      }
+      i {
+        font-size: 28px;
+      }
+    }
+    .info {
+      display: inline-block;
+      color: gray;
+      font-size: larger;
+      font-weight: 500;
+    }
+    .progress {
+      .ant-progress-line {
+        position: relative;
+        .ant-progress-inner {
+          border-radius: 0;
+          .ant-progress-bg {
+            height: 20px !important;
+          }
+        }
+      }
+    }
+  }
 }

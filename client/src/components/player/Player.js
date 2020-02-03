@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Row, Col } from 'antd';
+import { Row, Col, Icon, Progress, Button } from 'antd';
 
 import './Player.scss';
 import Timeline from '../timeline/Timeline';
@@ -13,6 +13,12 @@ class Player extends Component {
         super(props);
 
         this.state = {
+            video: {
+                isVideoPlaying: false,
+                currentTime: 0,
+                duration: 0,
+                percentPlayed: 0
+            },
             previewFrame: {
                 sx: 0,
                 sy: 0,
@@ -21,7 +27,7 @@ class Player extends Component {
             },
             frameBuffer: []
         };
-        
+
         // frame constructor
         this.frame = {
             num: 0,            // frame number,
@@ -47,6 +53,16 @@ class Player extends Component {
         this.canvasEl = React.createRef();
         this.previewCanvasEl = React.createRef();
         this.updatePosition = this.updatePosition.bind(this);
+        this.play = this.play.bind(this);
+        this.pause = this.pause.bind(this);
+    }
+
+    play(){
+        this.videoEl.current.play();
+    }
+
+    pause() {
+        this.videoEl.current.pause();
     }
 
     initVideoProcessing() {
@@ -159,10 +175,10 @@ class Player extends Component {
     // update position of salient points rectangle
     // this values are lifter from canvas -> timleine -> player component
     updatePosition(rect, frameNumber) {
-        const frameBuffer = this.state.frameBuffer;       
+        const frameBuffer = this.state.frameBuffer;
         frameBuffer[frameNumber].sx = rect.x;
         frameBuffer[frameNumber].sy = rect.y;
-        this.setState({frameBuffer: [...frameBuffer]}, () => {
+        this.setState({ frameBuffer: [...frameBuffer] }, () => {
             console.log(this.state.frameBuffer[frameNumber]);
         });
     }
@@ -194,29 +210,71 @@ class Player extends Component {
 
         // event triggered on playing video
         this.videoEl.current.addEventListener('play', (e) => {
+            const video = e.target;
             // draw frames on temp canvas to find salient features
-            drawFrames(this.videoEl.current);
+            drawFrames(video);
 
             // init video processing using opencv
             this.initVideoProcessing();
 
             // start scene detection
             scd.start();
+
+            if (video.currentTime !== 0) {
+                this.setState({
+                    video: {
+                        ...this.state.video,
+                        isVideoPlaying: true,
+                        currentTime: video.currentTime,
+                        percentPlayed: (video.currentTime / video.duration) * 100
+                    }
+                });
+            }
+        });
+
+        // event triggered on pausing video
+        this.videoEl.current.addEventListener('pause', (e) => {
+            const video = e.target;
+            this.setState({
+                video: {
+                    ...this.state.video,
+                    isVideoPlaying: false
+                }
+            });
         });
 
         // event triggered while playing video
         this.videoEl.current.addEventListener('timeupdate', (e) => {
-            this.refs.videoTimeline.onVideoPlaying(e.target);
+            const video = e.target;
+
+            if (video.currentTime !== 0) {
+                this.setState({
+                    video: {
+                        ...this.state.video,
+                        isVideoPlaying: true,
+                        currentTime: video.currentTime,
+                        percentPlayed: (video.currentTime / video.duration) * 100
+                    }
+                });
+            }
         });
 
         // event triggered when new video is selected
         this.videoEl.current.addEventListener('durationchange', (e) => {
+            const video = e.target;
+
             // reset video frames on choosing another video
             this.setState({
                 frameBuffer: []
             });
 
-            this.refs.videoTimeline.onVideoChanged(e.target);
+            this.setState({
+                video: {
+                    ...this.state.video,
+                    currentTime: 0,
+                    duration: video.duration
+                }
+            });
 
             // start scene detection
             scd = this.initSceneDetection();
@@ -244,7 +302,7 @@ class Player extends Component {
                 <Row>
                     <Col span={15}>
                         <div className="video-container">
-                            <video width="640" height="480" controls src={this.props.videoSrc} ref={this.videoEl} >
+                            <video width="640" height="480" src={this.props.videoSrc} ref={this.videoEl} >
                                 Sorry, your browser doesn't support embedded videos.
                             </video>
                         </div>
@@ -260,8 +318,21 @@ class Player extends Component {
                     </Col>
                 </Row>
                 <Row>
+                    <Col span={24} className="time-metadata">
+                        <Row type="flex">
+                            <Col span={1} className="time">
+                                {this.state.video.isVideoPlaying ? <Button shape="circle" icon="pause-circle" onClick={this.pause}></Button> : <Button disabled={this.state.video.duration<=0} shape="circle" icon="play-circle" onClick={this.play}></Button>}
+                            </Col>
+                            <Col span={2} className="info">
+                                {this.state.video.currentTime.toFixed(2)}/{this.state.video.duration.toFixed(2)}
+                            </Col>
+                            <Col span={20} className="progress">
+                                <Progress percent={this.state.video.percentPlayed} status="normal" showInfo={false} strokeLinecap="square" strokeColor="gray" />
+                            </Col>
+                        </Row>
+                    </Col>
                     <Col span={24}>
-                        <Timeline frames={this.state.frameBuffer} ref="videoTimeline" updatePosition={this.updatePosition}></Timeline>
+                        <Timeline frames={this.state.frameBuffer} updatePosition={this.updatePosition}></Timeline>
                     </Col>
                 </Row>
             </div>
