@@ -15,7 +15,7 @@
     height: 50px;
     border: 1px solid gray;
     .ant-row-flex {
-      margin-top: 10px;
+      margin-top: 5px;
     }
     .time {
       .ant-btn {
@@ -38,7 +38,7 @@
         animation: none !important;
       }
       i {
-        font-size: 28px;
+        font-size: 36px;
       }
     }
     .info {
@@ -48,13 +48,19 @@
       font-weight: 500;
     }
     .progress {
-      .ant-progress-line {
-        position: relative;
-        .ant-progress-inner {
+      .ant-slider {
+        margin: 0;
+        padding: 0;
+        height: 20px;
+        .ant-slider-rail, .ant-slider-track, .ant-slider-step {
+          height: 20px;
+        }
+        .ant-slider-handle {
+          height: 24px;
+          width: 5px;
           border-radius: 0;
-          .ant-progress-bg {
-            height: 20px !important;
-          }
+          margin-top: -2px;
+          margin-left: -4px;
         }
       }
     }

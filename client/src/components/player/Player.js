@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Row, Col, Icon, Progress, Button } from 'antd';
+import { Row, Col, Slider, Button } from 'antd';
 
 import './Player.scss';
 import Timeline from '../timeline/Timeline';
@@ -55,6 +55,7 @@ class Player extends Component {
         this.updatePosition = this.updatePosition.bind(this);
         this.play = this.play.bind(this);
         this.pause = this.pause.bind(this);
+        this.seek = this.seek.bind(this);
     }
 
     play(){
@@ -63,6 +64,10 @@ class Player extends Component {
 
     pause() {
         this.videoEl.current.pause();
+    }
+
+    seek(value) {
+        this.videoEl.current.currentTime = value;
     }
 
     initVideoProcessing() {
@@ -234,7 +239,6 @@ class Player extends Component {
 
         // event triggered on pausing video
         this.videoEl.current.addEventListener('pause', (e) => {
-            const video = e.target;
             this.setState({
                 video: {
                     ...this.state.video,
@@ -319,7 +323,7 @@ class Player extends Component {
                 </Row>
                 <Row>
                     <Col span={24} className="time-metadata">
-                        <Row type="flex">
+                        <Row type="flex" justify="space-around" align="middle">
                             <Col span={1} className="time">
                                 {this.state.video.isVideoPlaying ? <Button shape="circle" icon="pause-circle" onClick={this.pause}></Button> : <Button disabled={this.state.video.duration<=0} shape="circle" icon="play-circle" onClick={this.play}></Button>}
                             </Col>
@@ -327,7 +331,14 @@ class Player extends Component {
                                 {this.state.video.currentTime.toFixed(2)}/{this.state.video.duration.toFixed(2)}
                             </Col>
                             <Col span={20} className="progress">
-                                <Progress percent={this.state.video.percentPlayed} status="normal" showInfo={false} strokeLinecap="square" strokeColor="gray" />
+                                <Slider step={0.0001}
+                                    min={0}
+                                    max={this.state.video.duration}
+                                    value={this.state.video.currentTime}
+                                    disabled={!this.state.video.isVideoPlaying}
+                                    onChange={this.seek}
+                                    tooltipVisible={false}
+                                />
                             </Col>
                         </Row>
                     </Col>
