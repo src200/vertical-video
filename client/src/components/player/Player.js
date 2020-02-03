@@ -21,7 +21,7 @@ class Player extends Component {
             },
             frameBuffer: []
         };
-
+        
         // frame constructor
         this.frame = {
             num: 0,            // frame number,
@@ -46,6 +46,7 @@ class Player extends Component {
         this.videoEl = React.createRef();
         this.canvasEl = React.createRef();
         this.previewCanvasEl = React.createRef();
+        this.updatePosition = this.updatePosition.bind(this);
     }
 
     initVideoProcessing() {
@@ -157,8 +158,13 @@ class Player extends Component {
 
     // update position of salient points rectangle
     // this values are lifter from canvas -> timleine -> player component
-    updatePosition(rect) {
-        console.log(rect);
+    updatePosition(rect, frameNumber) {
+        const frameBuffer = this.state.frameBuffer;       
+        frameBuffer[frameNumber].sx = rect.x;
+        frameBuffer[frameNumber].sy = rect.y;
+        this.setState({frameBuffer: [...frameBuffer]}, () => {
+            console.log(this.state.frameBuffer[frameNumber]);
+        });
     }
 
     componentDidMount() {

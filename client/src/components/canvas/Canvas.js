@@ -6,7 +6,7 @@ class Canvas extends Component {
     updatePosition(rect, frame) {
         let pos = { x: 0, y: 0 };
         pos.x = (rect.startX * 640) / frame.w; // TODO
-        this.props.updatePosition(pos);
+        this.props.updatePosition(pos, frame.num);
     }
 
     componentDidMount() {
