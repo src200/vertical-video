@@ -3,6 +3,7 @@ import { Row, Col, Slider, Button } from 'antd';
 
 import './Player.scss';
 import Timeline from '../timeline/Timeline';
+import MLT from 'mlt';
 
 const cv = window.cv;
 const Scd = window.Scd;
