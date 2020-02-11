@@ -3,8 +3,17 @@ import "./App.scss";
 import Uploader from "../uploader/Uploader";
 import Player from "../player/Player";
 import { Layout } from 'antd';
+import { connect }  from 'react-redux';
 
 const { Content } = Layout;
+
+const mapStateToProps = (state) => {
+
+}
+
+const mapDispatchToProps = (dispatch) => {
+
+}
 
 class App extends Component {
     constructor(props) {
@@ -39,26 +48,7 @@ class App extends Component {
     render() {
         return (
             <Layout>
-                {/* <Sider>
-                    <Menu theme="dark" defaultSelectedKeys={['1']} mode="inline">
-                        <Menu.Item key="1">
-                            <a onClick={this.setAspectRatio.bind(this, '9:16')}>
-                                <span>9:16</span>
-                            </a>
-                        </Menu.Item>
-                        <Menu.Item key="2">
-                            <a onClick={this.setAspectRatio.bind(this, '4:5')}>
-                                <span>4:5</span>
-                            </a>
-                        </Menu.Item>
-                    </Menu>
-                </Sider> */}
                 <Layout className="App">
-                    {/* <Header className="App-header">
-                    <div>
-                        Header
-                    </div> 
-                </Header> */}
                     <Content className="App-content">
                         <div className="App-uploader">
                             <Uploader liftVideoSrc={this.captureVideoSrc}></Uploader>
@@ -67,15 +57,10 @@ class App extends Component {
                             <Player videoSrc={this.state.videoSrc}></Player>
                         </div>
                     </Content>
-                    {/* <Footer className="App-footer">
-                    <div>
-                        Footer
-                    </div>
-                </Footer> */}
                 </Layout>
             </Layout>
         );
     }
 }
 
-export default App;
+export default connect(mapStateToProps, mapDispatchToProps)(App);

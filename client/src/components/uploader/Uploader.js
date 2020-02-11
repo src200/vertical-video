@@ -1,7 +1,15 @@
 import React, { Component } from "react";
 import "./Uploader.scss";
 import { Upload, Input, message, Button, Icon } from 'antd';
+import { connect } from 'react-redux';
 
+const mapStateToProps = (state) => {
+
+}
+
+const mapDispatchToProps = (dispatch) => {
+
+}
 class Uploader extends Component {
     constructor(props) {
         super(props);
@@ -42,7 +50,7 @@ class Uploader extends Component {
     render() {
         return (
             <div className="Uploader">
-                <Input className="input-url" type="url" placeholder="Paste youtube video url here" value={this.state.videoUrl} onChange={this.beforeUpload}/>
+                {/* <Input className="input-url" type="url" placeholder="Paste youtube video url here" value={this.state.videoUrl} onChange={this.beforeUpload}/> */}
                 <Upload name="file" accept="video/mp4,video/x-m4v,video/*" action= "http://localhost:8080/upload"
                      beforeUpload={this.beforeUpload} onChange={this.onChange}>
                     <Button type="primary" size="large">
@@ -54,4 +62,4 @@ class Uploader extends Component {
     }
 }
 
-export default Uploader;
+export default connect(mapStateToProps, mapDispatchToProps)(Uploader);

@@ -1,12 +1,20 @@
 import React, { Component } from 'react';
 import { Row, Col, Slider, Button } from 'antd';
-
+import { connect } from 'react-redux';
 import './Player.scss';
 import Timeline from '../timeline/Timeline';
 
 const cv = window.cv;
 const Scd = window.Scd;
 const KalmanFilter = window.KalmanFilter;
+
+const mapStateToProps = (state) => {
+
+}
+
+const mapDispatchToProps = (dispatch) => {
+
+}
 
 class Player extends Component {
     constructor(props) {
@@ -351,4 +359,4 @@ class Player extends Component {
     }
 }
 
-export default Player;
+export default connect(mapStateToProps, mapDispatchToProps)(Player);
