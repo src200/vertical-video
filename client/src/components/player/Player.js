@@ -15,6 +15,7 @@ class Player extends Component {
 
         this.state = {
             video: {
+                src: '',
                 isVideoPlaying: false,
                 currentTime: 0,
                 duration: 0,
@@ -49,6 +50,8 @@ class Player extends Component {
 
         this.reqAnimeId = '';
 
+        this.mlt = new MLT;
+
         // create refs to store the video and canvas DOM element
         this.videoEl = React.createRef();
         this.canvasEl = React.createRef();
@@ -57,9 +60,10 @@ class Player extends Component {
         this.play = this.play.bind(this);
         this.pause = this.pause.bind(this);
         this.seek = this.seek.bind(this);
+        this.export = this.export.bind(this);
     }
 
-    play(){
+    play() {
         this.videoEl.current.play();
     }
 
@@ -69,6 +73,25 @@ class Player extends Component {
 
     seek(value) {
         this.videoEl.current.currentTime = value;
+    }
+
+    export() {
+        let affine = new MLT.Filter.Affine;
+        let frames = [];
+        for (let i = 0; i < this.state.frameBuffer.length; i++) {
+            frames.push({
+                frame: this.state.frameBuffer[i].num,
+                x: -500,
+                y: this.state.frameBuffer[i].sy,
+                w: 1280,
+                h: 720,
+                sat: 0
+            });
+        }
+
+        affine.geometry(frames);
+        this.mlt.push(affine);
+        console.log(this.mlt.toString({pretty: true}));
     }
 
     initVideoProcessing() {
@@ -276,6 +299,7 @@ class Player extends Component {
             this.setState({
                 video: {
                     ...this.state.video,
+                    isVideoPlaying: false,
                     currentTime: 0,
                     duration: video.duration
                 }
@@ -283,6 +307,9 @@ class Player extends Component {
 
             // start scene detection
             scd = this.initSceneDetection();
+
+            // read new video in to MLT Producer
+            this.mlt.push(new MLT.Producer.Video({ source: this.props.videoSrc.uid }));
         });
 
         // event is fired when video is ready to play.
@@ -301,13 +328,24 @@ class Player extends Component {
             cancelAnimationFrame(this.reqAnimeId);
     }
 
+    componentWillReceiveProps(nextProps, prevState) {
+        if (nextProps.videoSrc !== prevState.videoSrc) {
+            this.setState({
+                video: {
+                    ...this.state.video,
+                    src: URL.createObjectURL(nextProps.videoSrc)
+                }
+            });
+        }
+    }
+
     render() {
         return (
             <div className="player">
                 <Row>
                     <Col span={15}>
                         <div className="video-container">
-                            <video width="640" height="480" src={this.props.videoSrc} ref={this.videoEl} >
+                            <video width="640" height="480" src={this.state.video.src} ref={this.videoEl} >
                                 Sorry, your browser doesn't support embedded videos.
                             </video>
                         </div>
@@ -326,12 +364,12 @@ class Player extends Component {
                     <Col span={24} className="time-metadata">
                         <Row type="flex" justify="space-around" align="middle">
                             <Col span={1} className="time">
-                                {this.state.video.isVideoPlaying ? <Button shape="circle" icon="pause-circle" onClick={this.pause}></Button> : <Button disabled={this.state.video.duration<=0} shape="circle" icon="play-circle" onClick={this.play}></Button>}
+                                {this.state.video.isVideoPlaying ? <Button shape="circle" icon="pause-circle" onClick={this.pause}></Button> : <Button disabled={this.state.video.duration <= 0} shape="circle" icon="play-circle" onClick={this.play}></Button>}
                             </Col>
                             <Col span={2} className="info">
                                 {this.state.video.currentTime.toFixed(2)}/{this.state.video.duration.toFixed(2)}
                             </Col>
-                            <Col span={20} className="progress">
+                            <Col span={19} className="progress">
                                 <Slider step={0.0001}
                                     min={0}
                                     max={this.state.video.duration}
@@ -340,6 +378,9 @@ class Player extends Component {
                                     onChange={this.seek}
                                     tooltipVisible={false}
                                 />
+                            </Col>
+                            <Col span={1}>
+                                <Button shape="circle" icon="upload" onClick={this.export}></Button>
                             </Col>
                         </Row>
                     </Col>

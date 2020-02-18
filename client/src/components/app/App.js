@@ -19,15 +19,9 @@ class App extends Component {
     }
 
     captureVideoSrc(src) {
-        if (src instanceof File) {
-            this.setState( {
-                videoSrc: URL.createObjectURL(src)
-            });
-        } else {
-            this.setState( {
-                videoSrc: src
-            });
-        }
+        this.setState( {
+            videoSrc: src
+        });
     }
 
     setAspectRatio(aspectRatio) {
