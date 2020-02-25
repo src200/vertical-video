@@ -2,7 +2,7 @@ var express = require('express');
 var formidable = require('formidable');
 var cv = require('opencv4nodejs');
 var KalmanFilter = require('kalmanjs');
- 
+
 const { grabFrames } = require('../utils');
 var router = express.Router();
 
@@ -29,15 +29,28 @@ router.post('/upload', function (req, res) {
       let grayFrame = new cv.Mat();
 
       let sum, avgX;
-      const FPS = 24;
+      // const FPS = 24;
       const kf = new KalmanFilter({ R: 0.01, Q: 4 });
-      let delay = 1000 / FPS;
-      // var out = new cv.VideoWriter('out/output.mp4', cv.VideoWriter.fourcc('MJPG'), FPS, new cv.Size(270, 480));
 
-      grabFrames(file.path, delay, (frame) => {
-        grayFrame = frame.cvtColor(cv.COLOR_RGBA2GRAY)
+      // open video capture
+      const cap = new cv.VideoCapture(file.path);
+      const FPS = cap.get(cv.CAP_PROP_FPS);
+      const frameCount = cap.get(cv.CAP_PROP_FRAME_COUNT);
+      const width = cap.get(cv.CAP_PROP_FRAME_WIDTH);
+      const height = cap.get(cv.CAP_PROP_FRAME_HEIGHT);
+      const fourcc = cap.get(cv.CAP_PROP_FOURCC);
+      // console.log('width:', width);
+      // console.log('height:', height);
+      // console.log('codec:', fourcc);
+      // console.log('frame count: ', frameCount);
+
+      var out = new cv.VideoWriter('out/output.mp4', fourcc, parseInt(FPS), new cv.Size(width, height), true);
+      // loop through the capture
+      let frame = cap.read();
+      while (!frame.empty) {
+        grayFrame = frame.bgrToGray();
         // cv.cvtColor(frame, grayFrame, cv.COLOR_RGBA2GRAY);
-        corners = cv.goodFeaturesToTrack(grayFrame, maxCorners, qualityLevel, minDistance, new cv.Mat(), blockSize);
+        corners = grayFrame.goodFeaturesToTrack(maxCorners, qualityLevel, minDistance, new cv.Mat(), blockSize);
 
         sum = 0;
         for (var i = 0; i < corners.length; i++) {
@@ -48,10 +61,15 @@ router.post('/upload', function (req, res) {
 
         avgX = sum / corners.length;
 
-        // console.log(kf.filter(avgX));
-        // const cropRegion = frame.getRegion(new cv.Rect(50, 50, 25, 25));
-        // out.write(grayFrame);
-      });
+        console.log(kf.filter(avgX));
+        const cropRegion = frame.getRegion(new cv.Rect(100, 100, 270, 480));
+        // console.log(frame);
+        // console.log(cropRegion);
+        out.write(cropRegion);
+        frame = cap.read();
+      }
+      console.log('VIDEO CAPTURE ENDED');
+      // out.release();
     }
 
     initVideoProcessing();
