@@ -1,34 +1,22 @@
-import React, { Component } from "react";
+import React, { useState } from "react";
 import "./Uploader.scss";
 import { Upload, Input, message, Button, Icon } from 'antd';
 
-class Uploader extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            videoUrl: ''
-        };
+const Uploader = (props) => {
+    const [videoUrl, setVideoUrl] = useState('');
 
-        this.onChange = this.onChange.bind(this);
-        this.beforeUpload = this.beforeUpload.bind(this);
-    }
-
-    componentDidMount() {
-        // console.log(this.props);
-    }
-
-    beforeUpload(src) {
-        if(src instanceof File) {
-            this.props.liftVideoSrc(src);
+    const beforeUpload = (src) => {
+        if (src instanceof File) {
+            props.liftVideoSrc(src);
         } else {
-            this.setState({videoUrl: src.target.value});
+            setVideoUrl(src.target.value);
             if (src.target.value) {
-                this.props.liftVideoSrc(src.target.value);
+                props.liftVideoSrc(src.target.value);
             }
         }
-    }
+    };
 
-    onChange(info) {
+    const onChange = (info) => {
         if (info.file.status !== 'uploading') {
             console.log(info.file, info.fileList);
         }
@@ -37,21 +25,18 @@ class Uploader extends Component {
         } else if (info.file.status === 'error') {
             message.error(`${info.file.name} file upload failed.`);
         }
-    }
+    };
 
-    render() {
-        return (
-            <div className="Uploader">
-                <Input className="input-url" type="url" placeholder="Paste youtube video url here" value={this.state.videoUrl} onChange={this.beforeUpload}/>
-                <Upload name="file" accept="video/mp4,video/x-m4v,video/*" action= "http://localhost:8080/upload"
-                     beforeUpload={this.beforeUpload} onChange={this.onChange}>
-                    <Button type="primary" size="large">
-                        <Icon type="upload" /> Choose a video file
-                    </Button>
-                </Upload>
-            </div>
-        );
-    }
+    return (
+        <div className="Uploader">
+            <Upload name="file" accept="video/mp4,video/x-m4v,video/*" action= "http://localhost:8080/upload"
+                 beforeUpload={beforeUpload} onChange={onChange}>
+                <Button type="primary" size="large">
+                    <Icon type="upload" /> Choose a video file
+                </Button>
+            </Upload>
+        </div>
+    );
 }
 
 export default Uploader;

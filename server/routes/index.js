@@ -49,23 +49,26 @@ router.post('/upload', function (req, res) {
       let frame = cap.read();
       while (!frame.empty) {
         grayFrame = frame.bgrToGray();
-        // cv.cvtColor(frame, grayFrame, cv.COLOR_RGBA2GRAY);
-        corners = grayFrame.goodFeaturesToTrack(maxCorners, qualityLevel, minDistance, new cv.Mat(), blockSize);
 
-        sum = 0;
-        for (var i = 0; i < corners.length; i++) {
-          // point = new cv.Point(corners.data32F[i * 2], corners.data32F[(i * 2) + 1]);
-          // goodFeatures.push(point);
-          sum = sum + (corners[i].x - 200);
-        }
+        setTimeout(() => {
+          // cv.cvtColor(frame, grayFrame, cv.COLOR_RGBA2GRAY);
+          corners = grayFrame.goodFeaturesToTrack(maxCorners, qualityLevel, minDistance, new cv.Mat(), blockSize);
 
-        avgX = sum / corners.length;
+          sum = 0;
+          for (var i = 0; i < corners.length; i++) {
+            // point = new cv.Point(corners.data32F[i * 2], corners.data32F[(i * 2) + 1]);
+            // goodFeatures.push(point);
+            sum = sum + (corners[i].x - 200);
+          }
 
-        console.log(kf.filter(avgX));
-        const cropRegion = frame.getRegion(new cv.Rect(100, 100, 270, 480));
-        // console.log(frame);
-        // console.log(cropRegion);
-        out.write(cropRegion);
+          avgX = sum / corners.length;
+
+          console.log(kf.filter(avgX));
+          const cropRegion = frame.getRegion(new cv.Rect(100, 100, 270, 480));
+          // console.log(frame);
+          // console.log(cropRegion);
+          out.write(grayFrame);
+        }, 0);
         frame = cap.read();
       }
       console.log('VIDEO CAPTURE ENDED');

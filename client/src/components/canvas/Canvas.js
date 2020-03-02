@@ -1,18 +1,13 @@
-import React, { Component, Fragment } from 'react';
-// import { Rnd } from 'react-rnd';
+import React, { useEffect, useRef } from 'react';
 import './Canvas.scss';
 
-class Canvas extends Component {
-    updatePosition(rect, frame) {
-        let pos = { x: 0, y: 0 };
-        pos.x = (rect.startX * 640) / frame.w; // TODO
-        this.props.updatePosition(pos, frame.num);
-    }
+const Canvas = (props) => {
+    let canvasEl = useRef(null);
 
-    componentDidMount() {
-        let frame = this.props.frame;
+    useEffect(() => {
+        let frame = props.frame;
 
-        const canvas = this[`canvas_${frame.num}`];
+        const canvas = canvasEl;
         canvas.ctx = canvas.getContext('2d');
         canvas.rect = {};
         canvas.drag = false;
@@ -40,37 +35,39 @@ class Canvas extends Component {
 
                 // drag rect within canvas bounds
                 if (canvas.rect.startX >= 0 && (canvas.rect.startX + canvas.rect.w) <= canvas.width) {
-                    this.updatePosition(canvas.rect, frame);
+                    updatePosition(canvas.rect, frame);
                     canvas.ctx.clearRect(0, 0, canvas.width, canvas.height);
                     draw();
                 }
             }
         });
 
-        const draw = () => {
-            // canvas.ctx.globalAlpha = 0.2;
-            // canvas.ctx.globalCompositeOperation = 'source-in';
-            canvas.ctx.putImageData(
-                frame.src,
-                frame.x,
-                frame.y,
-            );
-            
-            canvas.ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-            canvas.ctx.fillRect(canvas.rect.startX, canvas.rect.startY, canvas.rect.w, canvas.rect.h);
-            // canvas.scrollIntoView();
-        };
-        
-        draw();
-    }
+        draw(canvas, frame);
+    });
 
-    render() {
-        return (
-            <Fragment>
-                <canvas ref={canvas => {this[`canvas_${this.props.frame.num}`] = canvas}}></canvas>
-            </Fragment>
+    const updatePosition = (rect, frame) => {
+        let pos = { x: 0, y: 0 };
+        pos.x = (rect.startX * 640) / frame.w; // TODO
+        props.updatePosition(pos, frame.num);
+    };
+
+    const draw = (canvas, frame) => {
+        // canvas.ctx.globalAlpha = 0.2;
+        // canvas.ctx.globalCompositeOperation = 'source-in';
+        canvas.ctx.putImageData(
+            frame.src,
+            frame.x,
+            frame.y,
         );
-    }
+
+        canvas.ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+        canvas.ctx.fillRect(canvas.rect.startX, canvas.rect.startY, canvas.rect.w, canvas.rect.h);
+        // canvas.scrollIntoView();
+    };
+
+    return (
+        <canvas ref={c => canvasEl = c}></canvas>
+    )
 }
 
 export default Canvas;

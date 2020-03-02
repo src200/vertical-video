@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Row, Col, Slider, Button } from 'antd';
 
 import './Player.scss';
@@ -8,70 +8,62 @@ const cv = window.cv;
 const Scd = window.Scd;
 const KalmanFilter = window.KalmanFilter;
 
-class Player extends Component {
-    constructor(props) {
-        super(props);
+const Player = (props) => {
+    const [video, setVideo] = useState({
+        isVideoPlaying: false,
+        currentTime: 0,
+        duration: 0,
+        percentPlayed: 0
+    });
 
-        this.state = {
-            video: {
-                isVideoPlaying: false,
-                currentTime: 0,
-                duration: 0,
-                percentPlayed: 0
-            },
-            previewFrame: {
-                sx: 0,
-                sy: 0,
-                sWidth: 270, // TODO
-                sHeight: 480
-            },
-            frameBuffer: []
-        };
+    const [previewFrame, setPreviewFrame] = useState({
+        sx: 0,
+        sy: 0,
+        sWidth: 270,
+        sHeight: 480
+    });
 
-        // frame constructor
-        this.frame = {
-            num: 0,            // frame number,
-            src: '',           // src of frame( from video)
-            sx: 0,             // x value of src image
-            sy: 0,             // y value of src image
-            dx: 0,             // x value of destination canvas
-            dy: 0,             // y value of destination canvas
-            oh: 0,             // original height of video
-            ow: 0,             // original width of video
-            h: 0,              //  height of frame
-            w: 0,              //  width of frame
-            t: 0,              // time of frame in the video
-            ar: 9 / 16,        // aspect ratio of frame( this could change in future for 1:1)
-            isKeyFrame: false, // make true when scene detects
-            srcVideoObject: '' // original src
-        }
+    const [frameBuffer, setFrameBuffer] = useState([]);
 
-        this.reqAnimeId = '';
-
-        // create refs to store the video and canvas DOM element
-        this.videoEl = React.createRef();
-        this.canvasEl = React.createRef();
-        this.previewCanvasEl = React.createRef();
-        this.updatePosition = this.updatePosition.bind(this);
-        this.play = this.play.bind(this);
-        this.pause = this.pause.bind(this);
-        this.seek = this.seek.bind(this);
+    // frame constructor
+    const frame = {
+        num: 0,            // frame number,
+        src: '',           // src of frame( from video)
+        sx: 0,             // x value of src image
+        sy: 0,             // y value of src image
+        dx: 0,             // x value of destination canvas
+        dy: 0,             // y value of destination canvas
+        oh: 0,             // original height of video
+        ow: 0,             // original width of video
+        h: 0,              //  height of frame
+        w: 0,              //  width of frame
+        t: 0,              // time of frame in the video
+        ar: 9 / 16,        // aspect ratio of frame( this could change in future for 1:1)
+        isKeyFrame: false, // make true when scene detects
+        srcVideoObject: '' // original src
     }
 
-    play(){
-        this.videoEl.current.play();
+    let scd, reqAnimeId = '';
+
+    // create refs to store the video and canvas DOM element
+    let videoEl = useRef(null);
+    let canvasEl = useRef(null);
+    let previewCanvasEl = useRef(null);
+
+    const play = () => {
+        videoEl.play();
     }
 
-    pause() {
-        this.videoEl.current.pause();
+    const pause = () => {
+        videoEl.pause();
     }
 
-    seek(value) {
-        this.videoEl.current.currentTime = value;
+    const seek = (value) => {
+        videoEl.currentTime = value;
     }
 
-    initVideoProcessing() {
-        let video = this.videoEl.current;
+    const initVideoProcessing = () => {
+        let video = videoEl;
         let cap = new cv.VideoCapture(video);
 
         // parameters for ShiTomasi corner detection
@@ -113,13 +105,11 @@ class Player extends Component {
 
                 avgX = sum / corners.rows;
 
-                this.setState({
-                    previewFrame: {
-                        sx: avgX ? kf.filter(avgX) : 0,
-                        sy: 0,
-                        sWidth: this.videoEl.current.height * (9 / 16),
-                        sHeight: this.videoEl.current.height
-                    }
+                setPreviewFrame({
+                    sx: avgX ? kf.filter(avgX) : 0,
+                    sy: 0,
+                    sWidth: videoEl.height * (9 / 16),
+                    sHeight: videoEl.height
                 });
 
                 // schedule the next one.
@@ -135,18 +125,18 @@ class Player extends Component {
     }
 
     // init scenedetection(pixel based)
-    initSceneDetection() {
-        const scd = Scd(this.videoEl.current, {
+    const initSceneDetection = () => {
+        const scd = Scd(videoEl, {
             mode: 'PlaybackMode',
             minSceneDuration: 1,
             threshold: 10
         });
 
         return scd;
-    }
+    };
 
     // update frame buffer
-    updateFrameBuffer(video, isKeyFrame) {
+    const updateFrameBuffer = (video, isKeyFrame) => {
         // create tmp canvas to copy pixels of src video object
         // this is to create new memory for every frame
         const tmpCanvas = document.createElement('canvas');
@@ -156,14 +146,14 @@ class Player extends Component {
         ctx.scale(0.187, 0.208); // scale canvas to thumbnail dimensions
         ctx.drawImage(video, 0, 0, video.width, video.height);
 
-        let newFrame = { ...this.frame };
-        newFrame.num = this.state.frameBuffer.length;
+        let newFrame = { ...frame };
+        newFrame.num = frameBuffer.length;
         newFrame.srcVideoObject = video;
         newFrame.src = ctx.getImageData(0, 0, video.width, video.height);
         newFrame.x = 0;
         newFrame.y = 0;
-        newFrame.sx = this.state.previewFrame.sx;
-        newFrame.sy = this.state.previewFrame.sy;
+        newFrame.sx = previewFrame.sx;
+        newFrame.sy = previewFrame.sy;
         newFrame.oh = video.videoHeight;
         newFrame.ow = video.videoWidth;
         newFrame.h = 100;
@@ -171,184 +161,171 @@ class Player extends Component {
         newFrame.t = video.currentTime;
         newFrame.ar = 9 / 16;
         newFrame.isKeyFrame = isKeyFrame ? isKeyFrame : false;
-
-        this.setState(prevState => ({
-            frameBuffer: [...prevState.frameBuffer, newFrame]
-        }));
+        setFrameBuffer(frameBuffer => frameBuffer.concat(newFrame));
     }
 
     // update position of salient points rectangle
     // this values are lifter from canvas -> timleine -> player component
-    updatePosition(rect, frameNumber) {
-        const frameBuffer = this.state.frameBuffer;
+    const updatePosition = (rect, frameNumber) => {
         frameBuffer[frameNumber].sx = rect.x;
         frameBuffer[frameNumber].sy = rect.y;
-        this.setState({ frameBuffer: [...frameBuffer] }, () => {
-            console.log(this.state.frameBuffer[frameNumber]);
-        });
-    }
+        setFrameBuffer([...frameBuffer]);
+    };
 
-    componentDidMount() {
-        const ctx = this.canvasEl.current.getContext('2d');
-        const previewCtx = this.previewCanvasEl.current.getContext('2d');
+    useEffect(() => {
+        canvasEl = canvasEl.current;
+        videoEl = videoEl.current;
+        previewCanvasEl = previewCanvasEl.current;
+
+        const ctx = canvasEl.getContext('2d');
+        const previewCtx = previewCanvasEl.getContext('2d');
         let imageData;
-        let scd = {};
 
         // draw frames on hidden canvas for collecting salient feature points
         const drawFrames = (video) => {
             if (!video.paused && !video.ended) {
                 ctx.drawImage(video, 0, 0, ctx.canvas.width, ctx.canvas.height);
                 drawPreviewFrames();
-                this.updateFrameBuffer(video);
+                updateFrameBuffer(video);
                 window.requestAnimationFrame(() => drawFrames(video));
             }
         }
 
         // preview canvas of actual cropped video
         const drawPreviewFrames = () => {
-            imageData = ctx.getImageData(this.state.previewFrame.sx,
-                this.state.previewFrame.sy, this.state.previewFrame.sWidth,
-                this.state.previewFrame.sHeight);
+            imageData = ctx.getImageData(previewFrame.sx,
+                previewFrame.sy, previewFrame.sWidth,
+                previewFrame.sHeight);
 
             previewCtx.putImageData(imageData, 0, 0);
         }
 
         // event triggered on playing video
-        this.videoEl.current.addEventListener('play', (e) => {
-            const video = e.target;
+        videoEl.addEventListener('play', (e) => {
             // draw frames on temp canvas to find salient features
-            drawFrames(video);
+            drawFrames(e.target);
 
             // init video processing using opencv
-            this.initVideoProcessing();
+            initVideoProcessing();
 
-            // start scene detection
+            // init scene detection
             scd.start();
 
             if (video.currentTime !== 0) {
-                this.setState({
-                    video: {
-                        ...this.state.video,
+                setVideo(video => {
+                    video = {
+                        ...video,
                         isVideoPlaying: true,
-                        currentTime: video.currentTime,
-                        percentPlayed: (video.currentTime / video.duration) * 100
+                        currentTime: e.target.currentTime,
+                        percentPlayed: (e.target.currentTime / e.target.duration) * 100
                     }
                 });
             }
         });
 
         // event triggered on pausing video
-        this.videoEl.current.addEventListener('pause', (e) => {
-            this.setState({
-                video: {
-                    ...this.state.video,
+        videoEl.addEventListener('pause', (e) => {
+            setVideo(video => {
+                video = {
+                    ...video,
                     isVideoPlaying: false
                 }
             });
         });
 
         // event triggered while playing video
-        this.videoEl.current.addEventListener('timeupdate', (e) => {
-            const video = e.target;
-
-            if (video.currentTime !== 0) {
-                this.setState({
-                    video: {
-                        ...this.state.video,
+        videoEl.addEventListener('timeupdate', (e) => {
+            if (e.target.currentTime !== 0) {
+                setVideo(video => {
+                    video = {
+                        ...video,
                         isVideoPlaying: true,
-                        currentTime: video.currentTime,
-                        percentPlayed: (video.currentTime / video.duration) * 100
+                        currentTime: e.target.currentTime,
+                        percentPlayed: (e.target.currentTime / e.target.duration) * 100
                     }
                 });
             }
         });
 
         // event triggered when new video is selected
-        this.videoEl.current.addEventListener('durationchange', (e) => {
-            const video = e.target;
-
+        videoEl.addEventListener('durationchange', (e) => {
             // reset video frames on choosing another video
-            this.setState({
-                frameBuffer: []
+            setFrameBuffer([]);
+
+            setVideo({
+                ...video,
+                currentTime: 0,
+                duration: e.target.duration
             });
 
-            this.setState({
-                video: {
-                    ...this.state.video,
-                    currentTime: 0,
-                    duration: video.duration
-                }
-            });
-
-            // start scene detection
-            scd = this.initSceneDetection();
+            debugger
+            scd = initSceneDetection();
         });
 
         // event is fired when video is ready to play.
-        this.videoEl.current.addEventListener('canplay', (e) => {
+        videoEl.addEventListener('canplay', (e) => {
 
         });
 
         // event is fired when scene is detected.
-        this.videoEl.current.addEventListener('scenechange', (e) => {
-            this.updateFrameBuffer(e.target, true);
+        videoEl.addEventListener('scenechange', (e) => {
+            updateFrameBuffer(e.target, true);
         });
-    }
 
-    componentWillUnmount() {
-        if (this.reqAnimeId)
-            cancelAnimationFrame(this.reqAnimeId);
-    }
+        return () => {
+            if (reqAnimeId) {
+                cancelAnimationFrame(reqAnimeId);
+            }
+        }
+    });
 
-    render() {
-        return (
-            <div className="player">
-                <Row>
-                    <Col span={15}>
-                        <div className="video-container">
-                            <video width="640" height="480" src={this.props.videoSrc} ref={this.videoEl} >
-                                Sorry, your browser doesn't support embedded videos.
+    return (
+        <div className="player">
+            <Row>
+                <Col span={15}>
+                    <div className="video-container">
+                        <video width="640" height="480" src={props.videoSrc} ref={videoEl} >
+                            Sorry, your browser doesn't support embedded videos.
                             </video>
-                        </div>
-                        <div className="canvas-container">
-                            <canvas ref={this.canvasEl} width="640" height="480" style={{ display: 'none' }}></canvas>
-                        </div>
-                    </Col>
-                    <Col span={9} align="right">
-                        <div className="preview-container">
-                            <canvas ref={this.previewCanvasEl} width={this.state.previewFrame.sWidth} height={this.state.previewFrame.sHeight}></canvas>
-                        </div>
-                        {/* <canvas id="canvasOutput"></canvas> */}
-                    </Col>
-                </Row>
-                <Row>
-                    <Col span={24} className="time-metadata">
-                        <Row type="flex" justify="space-around" align="middle">
-                            <Col span={1} className="time">
-                                {this.state.video.isVideoPlaying ? <Button shape="circle" icon="pause-circle" onClick={this.pause}></Button> : <Button disabled={this.state.video.duration<=0} shape="circle" icon="play-circle" onClick={this.play}></Button>}
-                            </Col>
-                            <Col span={2} className="info">
-                                {this.state.video.currentTime.toFixed(2)}/{this.state.video.duration.toFixed(2)}
-                            </Col>
-                            <Col span={20} className="progress">
-                                <Slider step={0.0001}
-                                    min={0}
-                                    max={this.state.video.duration}
-                                    value={this.state.video.currentTime}
-                                    disabled={!this.state.video.isVideoPlaying}
-                                    onChange={this.seek}
-                                    tooltipVisible={false}
-                                />
-                            </Col>
-                        </Row>
-                    </Col>
-                    <Col span={24}>
-                        <Timeline frames={this.state.frameBuffer} updatePosition={this.updatePosition}></Timeline>
-                    </Col>
-                </Row>
-            </div>
-        )
-    }
+                    </div>
+                    <div className="canvas-container">
+                        <canvas ref={canvasEl} width="640" height="480" style={{ display: 'none' }}></canvas>
+                    </div>
+                </Col>
+                <Col span={9} align="right">
+                    <div className="preview-container">
+                        <canvas ref={previewCanvasEl} width={previewFrame.sWidth} height={previewFrame.sHeight}></canvas>
+                    </div>
+                    {/* <canvas id="canvasOutput"></canvas> */}
+                </Col>
+            </Row>
+            <Row>
+                <Col span={24} className="time-metadata">
+                    <Row type="flex" justify="space-around" align="middle">
+                        <Col span={1} className="time">
+                            {video.isVideoPlaying ? <Button shape="circle" icon="pause-circle" onClick={pause}></Button> : <Button disabled={video.duration <= 0} shape="circle" icon="play-circle" onClick={play}></Button>}
+                        </Col>
+                        <Col span={2} className="info">
+                            {video.currentTime.toFixed(2)}/{video.duration.toFixed(2)}
+                        </Col>
+                        <Col span={20} className="progress">
+                            <Slider step={0.0001}
+                                min={0}
+                                max={video.duration}
+                                value={video.currentTime}
+                                disabled={!video.isVideoPlaying}
+                                onChange={seek}
+                                tooltipVisible={false}
+                            />
+                        </Col>
+                    </Row>
+                </Col>
+                <Col span={24}>
+                    <Timeline frames={frameBuffer} updatePosition={updatePosition}></Timeline>
+                </Col>
+            </Row>
+        </div>
+    )
 }
 
 export default Player;
