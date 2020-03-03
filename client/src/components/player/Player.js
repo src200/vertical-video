@@ -43,7 +43,7 @@ const Player = (props) => {
         srcVideoObject: '' // original src
     }
 
-    let scd, reqAnimeId = '';
+    let scd, reqAnimeId = '', ctx = {}, previewCtx = {};
 
     // create refs to store the video and canvas DOM element
     let videoEl = useRef(null);
@@ -51,15 +51,15 @@ const Player = (props) => {
     let previewCanvasEl = useRef(null);
 
     const play = () => {
-        videoEl.play();
+        videoEl.current.play();
     }
 
     const pause = () => {
-        videoEl.pause();
+        videoEl.current.pause();
     }
 
     const seek = (value) => {
-        videoEl.currentTime = value;
+        videoEl.current.currentTime = value;
     }
 
     const initVideoProcessing = () => {
@@ -172,33 +172,28 @@ const Player = (props) => {
         setFrameBuffer([...frameBuffer]);
     };
 
+    // draw frames on hidden canvas for collecting salient feature points
+    const drawFrames = (video) => {
+        if (!video.paused && !video.ended) {
+            ctx.drawImage(video, 0, 0, ctx.canvas.width, ctx.canvas.height);
+            drawPreviewFrames();
+            updateFrameBuffer(video);
+            reqAnimeId = requestAnimationFrame(() => drawFrames(video));
+        }
+    }
+
+    // preview canvas of actual cropped video
+    const drawPreviewFrames = () => {
+        previewCtx.putImageData(ctx.getImageData(previewFrame.sx, previewFrame.sy, previewFrame.sWidth, previewFrame.sHeight), 0, 0);
+    }
+
     useEffect(() => {
-        canvasEl = canvasEl.current;
         videoEl = videoEl.current;
+        canvasEl = canvasEl.current;
         previewCanvasEl = previewCanvasEl.current;
 
-        const ctx = canvasEl.getContext('2d');
-        const previewCtx = previewCanvasEl.getContext('2d');
-        let imageData;
-
-        // draw frames on hidden canvas for collecting salient feature points
-        const drawFrames = (video) => {
-            if (!video.paused && !video.ended) {
-                ctx.drawImage(video, 0, 0, ctx.canvas.width, ctx.canvas.height);
-                drawPreviewFrames();
-                updateFrameBuffer(video);
-                window.requestAnimationFrame(() => drawFrames(video));
-            }
-        }
-
-        // preview canvas of actual cropped video
-        const drawPreviewFrames = () => {
-            imageData = ctx.getImageData(previewFrame.sx,
-                previewFrame.sy, previewFrame.sWidth,
-                previewFrame.sHeight);
-
-            previewCtx.putImageData(imageData, 0, 0);
-        }
+        ctx = canvasEl.getContext('2d');
+        previewCtx = previewCanvasEl.getContext('2d');
 
         // event triggered on playing video
         videoEl.addEventListener('play', (e) => {
@@ -209,11 +204,11 @@ const Player = (props) => {
             initVideoProcessing();
 
             // init scene detection
-            scd.start();
+            // scd.start();
 
             if (video.currentTime !== 0) {
                 setVideo(video => {
-                    video = {
+                    return {
                         ...video,
                         isVideoPlaying: true,
                         currentTime: e.target.currentTime,
@@ -226,7 +221,7 @@ const Player = (props) => {
         // event triggered on pausing video
         videoEl.addEventListener('pause', (e) => {
             setVideo(video => {
-                video = {
+                return {
                     ...video,
                     isVideoPlaying: false
                 }
@@ -237,7 +232,7 @@ const Player = (props) => {
         videoEl.addEventListener('timeupdate', (e) => {
             if (e.target.currentTime !== 0) {
                 setVideo(video => {
-                    video = {
+                    return {
                         ...video,
                         isVideoPlaying: true,
                         currentTime: e.target.currentTime,
@@ -252,13 +247,14 @@ const Player = (props) => {
             // reset video frames on choosing another video
             setFrameBuffer([]);
 
-            setVideo({
-                ...video,
-                currentTime: 0,
-                duration: e.target.duration
+            setVideo(video => {
+                return {
+                    ...video,
+                    currentTime: 0,
+                    duration: e.target.duration
+                }
             });
 
-            debugger
             scd = initSceneDetection();
         });
 
@@ -277,7 +273,7 @@ const Player = (props) => {
                 cancelAnimationFrame(reqAnimeId);
             }
         }
-    });
+    }, []);
 
     return (
         <div className="player">
