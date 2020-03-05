@@ -43,7 +43,7 @@ const Canvas = (props) => {
         });
 
         draw(canvas, frame);
-    });
+    }, []);
 
     const updatePosition = (rect, frame) => {
         let pos = { x: 0, y: 0 };

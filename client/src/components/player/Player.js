@@ -161,7 +161,8 @@ const Player = (props) => {
         newFrame.t = video.currentTime;
         newFrame.ar = 9 / 16;
         newFrame.isKeyFrame = isKeyFrame ? isKeyFrame : false;
-        setFrameBuffer(frameBuffer => frameBuffer.concat(newFrame));
+        frameBuffer.push(newFrame);
+        setFrameBuffer(frameBuffer);
     }
 
     // update position of salient points rectangle
@@ -169,7 +170,7 @@ const Player = (props) => {
     const updatePosition = (rect, frameNumber) => {
         frameBuffer[frameNumber].sx = rect.x;
         frameBuffer[frameNumber].sy = rect.y;
-        setFrameBuffer([...frameBuffer]);
+        setFrameBuffer(frameBuffer);
     };
 
     // draw frames on hidden canvas for collecting salient feature points
@@ -187,6 +188,82 @@ const Player = (props) => {
         previewCtx.putImageData(ctx.getImageData(previewFrame.sx, previewFrame.sy, previewFrame.sWidth, previewFrame.sHeight), 0, 0);
     }
 
+    // video event handler
+    const videoEvtHandler = (e) => {
+        switch (e.type) {
+            case 'play': {
+                // draw frames on temp canvas to find salient features
+                drawFrames(e.target);
+
+                // init video processing using opencv
+                initVideoProcessing();
+
+                // init scene detection
+                scd.start();
+
+                if (video.currentTime !== 0) {
+                    setVideo(video => {
+                        return {
+                            ...video,
+                            isVideoPlaying: true,
+                            currentTime: e.target.currentTime,
+                            percentPlayed: (e.target.currentTime / e.target.duration) * 100
+                        }
+                    });
+                }
+
+                setPreviewFrame({
+                    sx: Math.random(),
+                    sy: 0,
+                    sWidth: videoEl.height,
+                    sHeight: videoEl.height
+                });
+
+                console.log(previewFrame)
+
+                break;
+            }
+            case 'pause': {
+                setVideo(video => {
+                    return {
+                        ...video,
+                        isVideoPlaying: false
+                    }
+                });
+            }
+            case 'timeupdate': {
+                if (e.target.currentTime !== 0) {
+                    setVideo(video => {
+                        return {
+                            ...video,
+                            isVideoPlaying: true,
+                            currentTime: e.target.currentTime,
+                            percentPlayed: (e.target.currentTime / e.target.duration) * 100
+                        }
+                    });
+                }
+            }
+            case 'durationchange': {
+                // reset video frames on choosing another video
+                setFrameBuffer([]);
+
+                setVideo(video => {
+                    return {
+                        ...video,
+                        currentTime: 0,
+                        duration: e.target.duration
+                    }
+                });
+
+                scd = initSceneDetection();
+            }    
+            case 'scenechange': {
+                updateFrameBuffer(e.target, true);
+            }
+        }
+    }
+
+    // update refs
     useEffect(() => {
         videoEl = videoEl.current;
         canvasEl = canvasEl.current;
@@ -194,86 +271,37 @@ const Player = (props) => {
 
         ctx = canvasEl.getContext('2d');
         previewCtx = previewCanvasEl.getContext('2d');
+    }, []);
 
+    // register video events
+    useEffect(() => {
         // event triggered on playing video
-        videoEl.addEventListener('play', (e) => {
-            // draw frames on temp canvas to find salient features
-            drawFrames(e.target);
-
-            // init video processing using opencv
-            initVideoProcessing();
-
-            // init scene detection
-            // scd.start();
-
-            if (video.currentTime !== 0) {
-                setVideo(video => {
-                    return {
-                        ...video,
-                        isVideoPlaying: true,
-                        currentTime: e.target.currentTime,
-                        percentPlayed: (e.target.currentTime / e.target.duration) * 100
-                    }
-                });
-            }
-        });
+        videoEl.addEventListener('play', videoEvtHandler);
 
         // event triggered on pausing video
-        videoEl.addEventListener('pause', (e) => {
-            setVideo(video => {
-                return {
-                    ...video,
-                    isVideoPlaying: false
-                }
-            });
-        });
+        videoEl.addEventListener('pause', videoEvtHandler);
 
         // event triggered while playing video
-        videoEl.addEventListener('timeupdate', (e) => {
-            if (e.target.currentTime !== 0) {
-                setVideo(video => {
-                    return {
-                        ...video,
-                        isVideoPlaying: true,
-                        currentTime: e.target.currentTime,
-                        percentPlayed: (e.target.currentTime / e.target.duration) * 100
-                    }
-                });
-            }
-        });
+        videoEl.addEventListener('timeupdate', videoEvtHandler);
 
         // event triggered when new video is selected
-        videoEl.addEventListener('durationchange', (e) => {
-            // reset video frames on choosing another video
-            setFrameBuffer([]);
-
-            setVideo(video => {
-                return {
-                    ...video,
-                    currentTime: 0,
-                    duration: e.target.duration
-                }
-            });
-
-            scd = initSceneDetection();
-        });
-
-        // event is fired when video is ready to play.
-        videoEl.addEventListener('canplay', (e) => {
-
-        });
+        videoEl.addEventListener('durationchange', videoEvtHandler);
 
         // event is fired when scene is detected.
-        videoEl.addEventListener('scenechange', (e) => {
-            updateFrameBuffer(e.target, true);
-        });
+        videoEl.addEventListener('scenechange', videoEvtHandler);
 
         return () => {
             if (reqAnimeId) {
                 cancelAnimationFrame(reqAnimeId);
             }
+
+            videoEl.removeEventLister('play', videoEvtHandler);
+            videoEl.removeEventLister('pause', videoEvtHandler);
+            videoEl.removeEventLister('timeupdate', videoEvtHandler);
+            videoEl.removeEventLister('durationchange', videoEvtHandler);
+            videoEl.removeEventLister('scenechange', videoEvtHandler);
         }
-    }, []);
+    });
 
     return (
         <div className="player">
